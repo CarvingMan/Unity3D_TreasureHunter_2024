@@ -28,10 +28,13 @@ public class PlayerControl : MonoBehaviour
     GameObject m_objScreenRotation = null;
     float m_fMouseX = 0;//마우스 axis값 받을 변수
     float m_fMouseY = 0;
-    float m_fMouseSpeed = 10;
+    float m_fMouseSpeed = 8;
 
     //리지드바디 관련 멤버변수
     Rigidbody m_rigidBody = null;
+
+    //레이캐스트를 통해 계단이 감지될때
+    bool m_isCheckStairs = false;
 
 
     //애니메이션 관련 멤버변수//
@@ -178,7 +181,18 @@ public class PlayerControl : MonoBehaviour
             m_vecMoveDirection.x = 0;
         }
 
-
+        //발끝의 레이캐스트를 통해 계단이 감지될 때 
+        if (m_isCheckStairs && m_vecMoveDirection != Vector3.zero) 
+        {
+            // 위는 계단 앞에 그냥 멈춰있을때 위아래로 둥둥뜨는 것을 방지하기위함
+            // 레이로 계단이 감지가 되고 플레이어가 움직이고 있을때 
+          
+            m_vecMoveDirection.y = 1; //y축 방향으로도 움직인다.
+        }
+        else
+        {
+            m_vecMoveDirection.y = 0;
+        }
     }
 
     void SetAnimator()
@@ -244,7 +258,7 @@ public class PlayerControl : MonoBehaviour
             //마우스의 y축 만큼 m_camera에 더해준다.
             m_vecCameraRotation.x = m_vecCameraRotation.x + m_fMouseY * m_fMouseSpeed;
             // 상하 마우스는 Clamp로 최소 최대값을 고정하여 360도로 돌지 못하게 한다.
-            m_vecCameraRotation.x = Mathf.Clamp(m_vecCameraRotation.x, -20, 5);
+            m_vecCameraRotation.x = Mathf.Clamp(m_vecCameraRotation.x, -25, 5);
             //오일러 값을 다시 사원수로 변경해서 rotation에 넣어준다.
             m_camera.transform.localRotation = Quaternion.Euler(m_vecCameraRotation);
         }
@@ -259,11 +273,12 @@ public class PlayerControl : MonoBehaviour
     //레이캐스트로 발끝에서 탐지하여 계단이면 위로 올라가게 하는 메소드//
     void CheckStairs()
     {
-        RaycastHit hit;
+        RaycastHit hit; // 레이에 맞은 콜라이더의 정보를 받기위한 변수
         //y축좌표는 기본으로 해당 오브젝트 발끝에 설정 되어있다.
         Vector3 vecOrigin = transform.position; //Ray의 origin vector
-        float fMaxDistance = 0.5f;
+        float fMaxDistance = 0.5f; // 레이케스트 길이 -> 걸을때 앞발과 중심점과 z축 차이가 있으므로 여유롭게 쏴준다.
 
+        //현재 좌표(발바닥)에서 앞쪽 방향으로 0.5만큼 레이를 쏜다.
         bool isCast = Physics.Raycast(vecOrigin, transform.forward, out hit, fMaxDistance);
         Debug.DrawRay(vecOrigin, transform.forward * 0.5f, Color.red);
 
@@ -273,15 +288,18 @@ public class PlayerControl : MonoBehaviour
             {
                 if (hit.collider.CompareTag("Stairs"))
                 {
+                    //계단에 맞았을시 중력을 비활성화 하고 m_vecMoveDirection.y를 1로 설정
+                    //(Addforce로 올라가면 튕겨나가는등 부자연스럽다.) 혹은 PlayerController를 사용하면 편하다고 하는데
+                    //                                              중력계산을 따로 해야한다.
                     m_rigidBody.useGravity = false;
                     m_rigidBody.velocity = Vector3.zero;
                     //m_rigidBody.isKinematic = true; 키네틱은 설정하면 직접 움직일시 좋지 않아서 제외
 
-                    m_vecMoveDirection.y = 1;
+                    m_isCheckStairs = true; // 위로 이동처리는 MoveProcess에서 한다.
                 }
                 else
                 {
-                    m_vecMoveDirection.y = 0;
+                    m_isCheckStairs = false;
                     m_rigidBody.useGravity = true;
 
                 }
@@ -289,7 +307,8 @@ public class PlayerControl : MonoBehaviour
             }
             else
             {
-                m_vecMoveDirection.y = 0;
+                //레이가 아무것도 맞지 않았을 시에도 false
+                m_isCheckStairs = false;
                 m_rigidBody.useGravity = true;
             }
         }
