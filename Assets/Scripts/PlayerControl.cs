@@ -17,6 +17,14 @@ public class PlayerControl : MonoBehaviour
     bool m_isRunKey = false; // Shift Key 입력
     bool m_isRuning = false; // 현재 뛰고있는 상태인지 확인
 
+    float m_fMaxStamina = 5; //최대 스테미나
+    float m_fCurrentStamina = 0; //현재 스태미나
+
+    //아이템(문 열쇠 보물) 상호작용 멤버변수
+    bool m_isActiveKeyDown = false; // 상호작용 키 E
+    // Getkey 다운 시 일 순간만 ture이므로 호출 프레임에 따라
+    // OnTriggerStay에서 감지를 못할 수 있다. 따라서 아래 변수를 통해 제어 후 로직이 끝날 시 토글한다.
+    bool m_isActivating = false;
     //시점 회전 관련 멤버변수//
     Vector3 m_vecScreenRotation = Vector3.zero;
     Vector3 m_vecCameraRotation = Vector3.zero;
@@ -28,7 +36,7 @@ public class PlayerControl : MonoBehaviour
     GameObject m_objScreenRotation = null;
     float m_fMouseX = 0;//마우스 axis값 받을 변수
     float m_fMouseY = 0;
-    float m_fMouseSpeed = 8;
+    float m_fMouseSpeed = 10;
 
     //리지드바디 관련 멤버변수
     Rigidbody m_rigidBody = null;
@@ -40,12 +48,12 @@ public class PlayerControl : MonoBehaviour
     //애니메이션 관련 멤버변수//
     Animator m_animator = null;
 
-
+    //PlayerUIManager 스크립트를 가져오기위한 멤버변수 -> 내장 public 메소드 사용하기위함
+    PlayerUIManager m_csPlayerUIManager;
 
     // Start is called before the first frame update
     void Start()
     {
-
         if (m_objScreenRotation != null)
         {
             //기본적으로 rotation은 사원수로 되어있어 행렬형태이다
@@ -87,6 +95,16 @@ public class PlayerControl : MonoBehaviour
         {
 
         }
+        m_fCurrentStamina = m_fMaxStamina;
+
+        if (m_csPlayerUIManager == null)
+        {
+            //해당하는 타입의 오브젝트를 찾는다.
+            m_csPlayerUIManager = FindObjectOfType<PlayerUIManager>();
+        }
+        else
+        {
+        }
     }
 
     // Update is called once per frame
@@ -95,6 +113,7 @@ public class PlayerControl : MonoBehaviour
         InputProcess();
         CheckStairs();
         MoveProcess();
+        SetStamina();
         SetAnimator();
     }
 
@@ -121,6 +140,16 @@ public class PlayerControl : MonoBehaviour
         // 달리기 키
         m_isRunKey = Input.GetKey(KeyCode.LeftShift);
 
+        //아이템 상호작용 키 (눌렀을 때에만)
+        m_isActiveKeyDown = Input.GetKeyDown(KeyCode.E);
+        if (m_isActiveKeyDown)
+        {
+            m_isActivating = true; //활성화 중
+        }
+        else
+        {
+            // false는 OnTriggerStay 로직이 끝나고 토글
+        }
 
         //카메라(시점) 관련
         m_fMouseX = Input.GetAxis("Mouse X");
@@ -137,7 +166,7 @@ public class PlayerControl : MonoBehaviour
 
             // 달리기는 일반적으로 정면 방향으로 달릴때 가능
             // 사이드나 뒤로 빨리뛰기는 현실적으로 달리기라 애매하다
-            if (m_isRunKey)
+            if (m_isRunKey && m_fCurrentStamina > 0) //달리기 키를 누르고 현재스태미나가 0보다 클때
             {
                 //달리기시 가속도 3배
                 m_fRunAcceleration = 3;
@@ -195,6 +224,33 @@ public class PlayerControl : MonoBehaviour
         }
     }
 
+    void SetStamina()
+    {
+        if (m_isRuning)
+        {
+            //현재 달리고 있을때 스태미나 감소
+            if(m_fCurrentStamina > 0)
+            {
+                m_fCurrentStamina -= Time.deltaTime*1.5f; // 스태미나 감소: 감소는 회복보다 빠르다
+            }
+        }
+        else
+        {
+            //현재 달리고 있지 않을때 스태미나 회복
+            if(m_fCurrentStamina < m_fMaxStamina)
+            {
+                m_fCurrentStamina += Time.deltaTime; //
+            }
+        }
+        // m_fCurrentStamina가 증/감 하면서 0 혹은 m_fMaxStamina를 벗어나지 않도록 고정
+        m_fCurrentStamina = Mathf.Clamp(m_fCurrentStamina, 0, m_fMaxStamina);
+    }
+    // 현재 남은 스태미나 비율을 전달할 함수 -> PlayerUIManager에서 사용
+    public float GetCurrentStaminaRate()
+    {
+        return m_fCurrentStamina/m_fMaxStamina; // 남은 스태미나 비율 전달
+    }
+
     void SetAnimator()
     {
         if (m_animator != null)
@@ -229,7 +285,7 @@ public class PlayerControl : MonoBehaviour
 
 
                 // 플레이어가 움직일 때 스크린 회전값으로 점진적 회전
-                float fPlayerRotateSpeed = 1; //안해도 적당해서 추후 1.2~ 처럼 테스트 
+                float fPlayerRotateSpeed = 10f;
                 Vector3 targetDirection = m_objScreenRotation.transform.forward; //m_objScreenRotation의 정면방향을 target
                 if (m_vecMoveDirection != Vector3.zero)
                 {
@@ -238,7 +294,7 @@ public class PlayerControl : MonoBehaviour
                     //Quaternion.LookRotation은 주어진 방향 벡터를 바라보는 회전을 생성하는 Unity의 함수라고 한다.
                     Quaternion targetRotation = Quaternion.LookRotation(targetDirection);
                     //Quaternion.Lerp 함수는 두 개의 회전 사이를 선형 보간하는 함수이다.
-                    transform.rotation = Quaternion.Lerp(transform.rotation, targetRotation, 0.2f * fPlayerRotateSpeed);
+                    transform.rotation = Quaternion.Lerp(transform.rotation, targetRotation, Time.deltaTime * fPlayerRotateSpeed);
 
                 }
                 else
@@ -273,20 +329,24 @@ public class PlayerControl : MonoBehaviour
     //레이캐스트로 발끝에서 탐지하여 계단이면 위로 올라가게 하는 메소드//
     void CheckStairs()
     {
-        RaycastHit hit; // 레이에 맞은 콜라이더의 정보를 받기위한 변수
+        RaycastHit hitFront; // 레이에 맞은 콜라이더의 정보를 받기위한 변수
+        RaycastHit hitBack;
         //y축좌표는 기본으로 해당 오브젝트 발끝에 설정 되어있다.
         Vector3 vecOrigin = transform.position; //Ray의 origin vector
         float fMaxDistance = 0.5f; // 레이케스트 길이 -> 걸을때 앞발과 중심점과 z축 차이가 있으므로 여유롭게 쏴준다.
 
         //현재 좌표(발바닥)에서 앞쪽 방향으로 0.5만큼 레이를 쏜다.
-        bool isCast = Physics.Raycast(vecOrigin, transform.forward, out hit, fMaxDistance);
+        bool isCastFront = Physics.Raycast(vecOrigin, transform.forward, out hitFront, fMaxDistance);
+        // 뒤 방향
+        bool isCastBack = Physics.Raycast(vecOrigin, transform.forward*-1, out hitBack, fMaxDistance);
         Debug.DrawRay(vecOrigin, transform.forward * 0.5f, Color.red);
+        Debug.DrawRay(vecOrigin, transform.forward * -0.5f, Color.red);
 
         if (m_rigidBody != null)
         {
-            if (isCast)
+            if (isCastFront)
             {
-                if (hit.collider.CompareTag("Stairs"))
+                if (hitFront.collider.CompareTag("Stairs"))
                 {
                     //계단에 맞았을시 중력을 비활성화 하고 m_vecMoveDirection.y를 1로 설정
                     //(Addforce로 올라가면 튕겨나가는등 부자연스럽다.) 혹은 PlayerController를 사용하면 편하다고 하는데
@@ -305,6 +365,23 @@ public class PlayerControl : MonoBehaviour
                 }
 
             }
+            else if(isCastBack)
+            {
+                if (hitBack.collider.CompareTag("Stairs"))
+                {
+                    m_rigidBody.useGravity = false;
+                    m_rigidBody.velocity = Vector3.zero;
+                    //m_rigidBody.isKinematic = true; 키네틱은 설정하면 직접 움직일시 좋지 않아서 제외
+
+                    m_isCheckStairs = true; // 위로 이동처리는 MoveProcess에서 한다.
+                }
+                else
+                {
+                    m_isCheckStairs = false;
+                    m_rigidBody.useGravity = true;
+                }
+              
+            }
             else
             {
                 //레이가 아무것도 맞지 않았을 시에도 false
@@ -317,5 +394,88 @@ public class PlayerControl : MonoBehaviour
             Debug.LogError("m_rigidBody가 없습니다.");
             m_rigidBody = GetComponent<Rigidbody>();
         }
+    }
+
+    //플레이어의 Rader Colider의 트리거 감지(문,열쇠,보물)
+    private void OnTriggerEnter(Collider other)
+    {
+        string strPropsName = null;
+        string strPropsDescription = null;
+        if (other.CompareTag("Door"))
+        {   
+            strPropsName = other.tag;
+            bool isLocked = other.GetComponentInParent<DoorActive>().GetIsLocked();
+            if (isLocked)
+            {
+                //Door(Locked)가 감지된다면
+                strPropsDescription = "It's locked.";
+            }
+            else
+            {
+                //Door(일반)가 감지된다면
+                //감지된 Door의 최상위 오브젝트에 스크립트가 있기에 InParent 사용
+                bool isActive = other.GetComponentInParent<DoorActive>().GetIsActive();
+                if (!isActive)
+                {
+                    strPropsDescription = "Press E to open";
+                }
+                else
+                {
+                    strPropsDescription = "Press E to close";
+                }
+            }
+
+            //TextUI설정
+            m_csPlayerUIManager.SetPropsMessage(strPropsName, strPropsDescription);
+            m_csPlayerUIManager.SetActivePropsMessage(true);
+        }
+        else if (other.CompareTag("Key"))
+        {
+            //열쇠일때 로직
+            strPropsName = other.name;
+            strPropsName = "Press E to get";
+        }
+        else
+        {
+        }
+    }
+
+
+    private void OnTriggerStay(Collider other)
+    {
+        if (other.CompareTag("Door"))
+        {
+            bool isLocked = other.GetComponentInParent<DoorActive>().GetIsLocked();
+            // 트리거에 접촉한 콜라이더 오브젝트 태그가 Door(일반)이라면
+            if (m_isActivating) //상호작용 키를 눌렀을때 ture가 된다.
+            {
+                if (isLocked) //잠겨있을시
+                {
+                    m_isActivating = false;
+                }
+                else
+                {
+                    //Door의 현재 애니메이션 파라미터 상태를 가져온다.
+                    //감지된 Door의 최상위 오브젝트에 스크립트가 있기에 InParent 사용
+                    bool isAtive = other.GetComponentInParent<DoorActive>().GetIsActive();
+                    //Door 애니매에션의 파라미터를 토글한다. (닫혀있음)->(열림)
+                    other.GetComponentInParent<DoorActive>().SetActiveAnimator(!isAtive);
+                    m_isActivating = false; //활성화 종료
+                }
+            }
+            else
+            {
+                m_isActivating = false; //활성화 종료(오류대비)
+            }
+        }
+        else
+        {
+        }
+    }
+
+    private void OnTriggerExit(Collider other)
+    {
+        //감지 트리거에서 벗어날 시 UI SetActive를 false(아이템이 닿아 있을때만 보여준다.)
+        m_csPlayerUIManager.SetActivePropsMessage(false); 
     }
 }
