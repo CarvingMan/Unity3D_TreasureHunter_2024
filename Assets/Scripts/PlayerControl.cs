@@ -331,56 +331,35 @@ public class PlayerControl : MonoBehaviour
     {
         RaycastHit hitFront; // 레이에 맞은 콜라이더의 정보를 받기위한 변수
         RaycastHit hitBack;
+        RaycastHit hitRight;
+        RaycastHit hitLeft;
         //y축좌표는 기본으로 해당 오브젝트 발끝에 설정 되어있다.
         Vector3 vecOrigin = transform.position; //Ray의 origin vector
         float fMaxDistance = 0.5f; // 레이케스트 길이 -> 걸을때 앞발과 중심점과 z축 차이가 있으므로 여유롭게 쏴준다.
 
+        //계단 레이어만 맞출 수 있도록 설정
+        int nLayerMask = 1 << LayerMask.NameToLayer("Stairs");
         //현재 좌표(발바닥)에서 앞쪽 방향으로 0.5만큼 레이를 쏜다.
-        bool isCastFront = Physics.Raycast(vecOrigin, transform.forward, out hitFront, fMaxDistance);
+        bool isCastFront = Physics.Raycast(vecOrigin, transform.forward, out hitFront, fMaxDistance, nLayerMask);
         // 뒤 방향
-        bool isCastBack = Physics.Raycast(vecOrigin, transform.forward*-1, out hitBack, fMaxDistance);
-        Debug.DrawRay(vecOrigin, transform.forward * 0.5f, Color.red);
-        Debug.DrawRay(vecOrigin, transform.forward * -0.5f, Color.red);
+        bool isCastBack = Physics.Raycast(vecOrigin, transform.forward * -1, out hitBack, fMaxDistance, nLayerMask);
+        bool isCastRight = Physics.Raycast(vecOrigin, transform.right, out hitRight, fMaxDistance, nLayerMask); 
+        bool isCastLeft = Physics.Raycast(vecOrigin,transform.right * -1, out hitLeft, fMaxDistance, nLayerMask);
+       // Debug.DrawRay(vecOrigin, transform.forward * 0.5f, Color.red);
+       // Debug.DrawRay(vecOrigin, transform.forward * -0.5f, Color.red);
 
         if (m_rigidBody != null)
         {
-            if (isCastFront)
+            if (isCastFront || isCastBack || isCastRight || isCastLeft)
             {
-                if (hitFront.collider.CompareTag("Stairs"))
-                {
-                    //계단에 맞았을시 중력을 비활성화 하고 m_vecMoveDirection.y를 1로 설정
-                    //(Addforce로 올라가면 튕겨나가는등 부자연스럽다.) 혹은 PlayerController를 사용하면 편하다고 하는데
-                    //                                              중력계산을 따로 해야한다.
-                    m_rigidBody.useGravity = false;
-                    m_rigidBody.velocity = Vector3.zero;
-                    //m_rigidBody.isKinematic = true; 키네틱은 설정하면 직접 움직일시 좋지 않아서 제외
+                //계단에 맞았을시 중력을 비활성화 하고 m_vecMoveDirection.y를 1로 설정
+                //(Addforce로 올라가면 튕겨나가는등 부자연스럽다.) 혹은 PlayerController를 사용하면 편하다고 하는데
+                //                                              중력계산을 따로 해야한다.
+                m_rigidBody.useGravity = false;
+                m_rigidBody.velocity = Vector3.zero;
+                //m_rigidBody.isKinematic = true; 키네틱은 설정하면 직접 움직일시 좋지 않아서 제외
 
-                    m_isCheckStairs = true; // 위로 이동처리는 MoveProcess에서 한다.
-                }
-                else
-                {
-                    m_isCheckStairs = false;
-                    m_rigidBody.useGravity = true;
-
-                }
-
-            }
-            else if(isCastBack)
-            {
-                if (hitBack.collider.CompareTag("Stairs"))
-                {
-                    m_rigidBody.useGravity = false;
-                    m_rigidBody.velocity = Vector3.zero;
-                    //m_rigidBody.isKinematic = true; 키네틱은 설정하면 직접 움직일시 좋지 않아서 제외
-
-                    m_isCheckStairs = true; // 위로 이동처리는 MoveProcess에서 한다.
-                }
-                else
-                {
-                    m_isCheckStairs = false;
-                    m_rigidBody.useGravity = true;
-                }
-              
+                m_isCheckStairs = true; // 위로 이동처리는 MoveProcess에서 한다.
             }
             else
             {
@@ -399,16 +378,27 @@ public class PlayerControl : MonoBehaviour
     //플레이어의 Rader Colider의 트리거 감지(문,열쇠,보물)
     private void OnTriggerEnter(Collider other)
     {
+        m_isActivating = false; //E키를 미리 누르고 접근할 수 있으므로 false로 초기화 해준다.
         string strPropsName = null;
         string strPropsDescription = null;
         if (other.CompareTag("Door"))
         {   
             strPropsName = other.tag;
             bool isLocked = other.GetComponentInParent<DoorActive>().GetIsLocked();
-            if (isLocked)
+            if (isLocked) //Door(Locked)가 감지된다면
             {
-                //Door(Locked)가 감지된다면
-                strPropsDescription = "It's locked.";
+                //잠긴문의 열쇠를 가져온다.
+                GameObject objKey = other.GetComponentInParent<DoorActive>().GetKey();
+                //해당 열쇠가 아이템리스트에 있는지 확인
+                bool isCheckKey = GetComponent<ItemManager>().CheckItem(objKey);
+                if (isCheckKey) // 열쇠를 가지고 있다면
+                {
+                    strPropsDescription = "Press E to unlock";
+                }
+                else
+                {
+                    strPropsDescription = "It's locked.";
+                }
             }
             else
             {
@@ -429,11 +419,22 @@ public class PlayerControl : MonoBehaviour
             m_csPlayerUIManager.SetPropsMessage(strPropsName, strPropsDescription);
             m_csPlayerUIManager.SetActivePropsMessage(true);
         }
-        else if (other.CompareTag("Key"))
+        else if (other.CompareTag("Item")) //아이템일때
         {
-            //열쇠일때 로직
-            strPropsName = other.name;
-            strPropsName = "Press E to get";
+            strPropsName = other.name.ToString();
+            //현재 인벤토리 창에 추가가능한지 확인
+            bool isAddItem = GetComponent<ItemManager>().GetIsAddItem();
+            if (isAddItem)
+            {
+                strPropsDescription = "Press E to get";
+            }
+            else
+            {
+                strPropsDescription = "Inventory is full";
+            }
+            //TextUI설정
+            m_csPlayerUIManager.SetPropsMessage(strPropsName, strPropsDescription);
+            m_csPlayerUIManager.SetActivePropsMessage(true);
         }
         else
         {
@@ -443,15 +444,38 @@ public class PlayerControl : MonoBehaviour
 
     private void OnTriggerStay(Collider other)
     {
+       
         if (other.CompareTag("Door"))
         {
+            m_csPlayerUIManager.SetActivePropsMessage(true);
             bool isLocked = other.GetComponentInParent<DoorActive>().GetIsLocked();
             // 트리거에 접촉한 콜라이더 오브젝트 태그가 Door(일반)이라면
             if (m_isActivating) //상호작용 키를 눌렀을때 ture가 된다.
             {
                 if (isLocked) //잠겨있을시
                 {
-                    m_isActivating = false;
+                    //잠긴문의 열쇠를 가져온다.
+                    GameObject objKey = other.GetComponentInParent<DoorActive>().GetKey();
+                    //해당 열쇠가 아이템리스트에 있는지 확인
+                    bool isCheckKey = GetComponent<ItemManager>().CheckItem(objKey);
+                    if (isCheckKey)
+                    {
+                        //아이템사용
+                        GetComponent<ItemManager>().UseItem(objKey);
+                        //잠금해제
+                        other.GetComponentInParent<DoorActive>().UnLockDoor();
+                        m_csPlayerUIManager.ClearInventory();
+                        m_csPlayerUIManager.SetInventory();
+                        //Door의 현재 애니메이션 파라미터 상태를 가져온다.
+                        //감지된 Door의 최상위 오브젝트에 스크립트가 있기에 InParent 사용
+                        bool isAtive = other.GetComponentInParent<DoorActive>().GetIsActive();
+                        //Door 애니매에션의 파라미터를 토글한다. (닫혀있음)->(열림)
+                        other.GetComponentInParent<DoorActive>().SetActiveAnimator(!isAtive);
+                    }
+                    else
+                    {
+
+                    }
                 }
                 else
                 {
@@ -460,13 +484,31 @@ public class PlayerControl : MonoBehaviour
                     bool isAtive = other.GetComponentInParent<DoorActive>().GetIsActive();
                     //Door 애니매에션의 파라미터를 토글한다. (닫혀있음)->(열림)
                     other.GetComponentInParent<DoorActive>().SetActiveAnimator(!isAtive);
-                    m_isActivating = false; //활성화 종료
                 }
             }
             else
             {
                 m_isActivating = false; //활성화 종료(오류대비)
             }
+            m_isActivating = false; //활성화 종료
+        }
+        else if (other.CompareTag("Item"))
+        {
+            m_csPlayerUIManager.SetActivePropsMessage(true);
+            //현재 인벤토리 창에 추가가능한지 확인
+            bool isAddItem = GetComponent<ItemManager>().GetIsAddItem();
+            if (isAddItem && m_isActivating)
+            {
+                //Debug.Log("확인");
+                GetComponent<ItemManager>().SetItem(other.gameObject);
+                m_csPlayerUIManager.ClearInventory();
+                m_csPlayerUIManager.SetInventory();
+            }
+            else
+            {
+
+            }
+            m_isActivating = false;
         }
         else
         {

@@ -45,7 +45,7 @@ public class DoorActive : MonoBehaviour
         return m_objKey;
     }
 
-    public void OpenDoor()
+    public void UnLockDoor()
     {
         m_isLocked = false;
     }
