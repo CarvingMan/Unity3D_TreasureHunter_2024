@@ -16,6 +16,7 @@ public class PlayerControl : MonoBehaviour
     bool m_isLeftKey = false;
     bool m_isRunKey = false; // Shift Key 입력
     bool m_isRuning = false; // 현재 뛰고있는 상태인지 확인
+    bool m_isCrouchKey = false; //웅크리기 키
 
     float m_fMaxStamina = 5; //최대 스테미나
     float m_fCurrentStamina = 0; //현재 스태미나
@@ -105,6 +106,7 @@ public class PlayerControl : MonoBehaviour
         else
         {
         }
+
     }
 
     // Update is called once per frame
@@ -139,6 +141,8 @@ public class PlayerControl : MonoBehaviour
         m_isRightKey = Input.GetKey(KeyCode.D);
         // 달리기 키
         m_isRunKey = Input.GetKey(KeyCode.LeftShift);
+        //웅크리기 키 -> ctrl 키이었으나 유니티 실행시 ctrl + s(뒤) 하면 저장하기와 겹쳐져 임시(추후 ctrl)로 변경가능
+        m_isCrouchKey = Input.GetKey(KeyCode.Space);
 
         //아이템 상호작용 키 (눌렀을 때에만)
         m_isActiveKeyDown = Input.GetKeyDown(KeyCode.E);
@@ -166,7 +170,8 @@ public class PlayerControl : MonoBehaviour
 
             // 달리기는 일반적으로 정면 방향으로 달릴때 가능
             // 사이드나 뒤로 빨리뛰기는 현실적으로 달리기라 애매하다
-            if (m_isRunKey && m_fCurrentStamina > 0) //달리기 키를 누르고 현재스태미나가 0보다 클때
+            // 웅크리고 있을때에는 달리지 못한다.
+            if (m_isRunKey && m_fCurrentStamina > 0 && !m_isCrouchKey) //달리기 키를 누르고 현재스태미나가 0보다 클때
             {
                 //달리기시 가속도 3배
                 m_fRunAcceleration = 3;
@@ -256,6 +261,7 @@ public class PlayerControl : MonoBehaviour
         if (m_animator != null)
         {
             //애니메이터 파라미터 설정
+            m_animator.SetBool("isCrouch", m_isCrouchKey);
             m_animator.SetBool("isFoward", m_isUpKey);
             m_animator.SetBool("isBack", m_isDownKey);
             m_animator.SetBool("isRight", m_isRightKey);
