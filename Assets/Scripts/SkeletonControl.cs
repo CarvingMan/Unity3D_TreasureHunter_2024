@@ -8,7 +8,7 @@ public class SkeletonControl : MonoBehaviour
 
     // 몬스터의 이동 및 상태 타입설정
     public enum E_SKELETON_TYPE
-    { 
+    {
         None,
         Patrol,//순찰 모드
         Attack,//공격모드
@@ -16,8 +16,8 @@ public class SkeletonControl : MonoBehaviour
         Max,
     }
 
-    [SerializeField]
-    E_SKELETON_TYPE m_eSkeletonType = E_SKELETON_TYPE.None;
+
+    public E_SKELETON_TYPE m_eSkeletonType = E_SKELETON_TYPE.None;
     //E_SKELETON_TYPE m_ePriviousSkeletonType = E_SKELETON_TYPE.None;
 
     Vector3 m_vecStartPosition = Vector3.zero;
@@ -41,7 +41,7 @@ public class SkeletonControl : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        if(m_eSkeletonType == E_SKELETON_TYPE.None)
+        if (m_eSkeletonType == E_SKELETON_TYPE.None)
         {
             Debug.LogError("Skeleton의 열거형 상수타입을 지정해주세요");
         }
@@ -50,14 +50,14 @@ public class SkeletonControl : MonoBehaviour
         m_vecMoveDirection = Vector3.forward;
         m_vecTurnBack = transform.forward * -1;
 
-       // m_vecGateEntra = GameObject.Find("MonsterRoomEntraGate").transform.position;
+        // m_vecGateEntra = GameObject.Find("MonsterRoomEntraGate").transform.position;
         //m_vecGateExit = GameObject.Find("MonsterRoomExitGate").transform.position;
     }
 
     // Update is called once per frame
     void Update()
     {
-        if(m_eSkeletonType == E_SKELETON_TYPE.Patrol)
+        if (m_eSkeletonType == E_SKELETON_TYPE.Patrol)
         {
             PatrolMode();
         }
@@ -72,8 +72,8 @@ public class SkeletonControl : MonoBehaviour
     void PatrolMode()
     {
         Vector3 vecCurrentPos = transform.position;
- 
-        if(m_isTurnning == false)
+
+        if (m_isTurnning == false)
         {
             //순찰중일때에는 걷기
             m_fMoveSpeed = 0.01f; //회전중이 아닐 때에만 걷는다.
@@ -90,13 +90,13 @@ public class SkeletonControl : MonoBehaviour
                 m_vecTurnBack = transform.forward * -1;
                 m_isPatrolMaxX = false;
                 m_isPatrolMinX = true;
-                m_isTurnning=true;
+                m_isTurnning = true;
             }
             else
             {
             }
         }
-        else if(m_isTurnning == true)
+        else if (m_isTurnning == true)
         {
             //회전시에는 멈춘다.
             m_fMoveSpeed = 0;
@@ -110,7 +110,7 @@ public class SkeletonControl : MonoBehaviour
             // qTurnRotation 과 현재 rotation의 오일러각 y축 차이가 5이하라면 목표 뒤 방향으로 바꾸어준다.
             // -> 완전히 180로 돌리고 m_isTurnning을 flase로 바꾸어 다시 앞으로 움직이게 한다.
             float fDiffRotate = Mathf.Abs(transform.rotation.eulerAngles.y - qTurnRotation.eulerAngles.y);
-            if( fDiffRotate <= 5f)
+            if (fDiffRotate <= 5f)
             {
                 transform.rotation = Quaternion.LookRotation(m_vecTurnBack);
                 m_isTurnning = false;
@@ -119,5 +119,4 @@ public class SkeletonControl : MonoBehaviour
 
     }
 
-    
 }
