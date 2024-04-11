@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.AI;
 
 public class SkeletonControl : MonoBehaviour
 {
@@ -11,7 +12,7 @@ public class SkeletonControl : MonoBehaviour
     {
         None,
         Patrol,//순찰 모드
-        Attack,//공격모드
+        Trace,//추격모드
         Return, // 처음위치로 돌아가기
         Max,
     }
@@ -38,6 +39,15 @@ public class SkeletonControl : MonoBehaviour
     bool m_isTurnning = false;
     Vector3 m_vecTurnBack = Vector3.zero;
 
+    // Trace 모드일시 navigation 사용
+    NavMeshAgent m_navmeshAgent = null;
+    GameObject m_objPlayer = null;
+
+
+    //애니메이션 관련
+    Animator m_animator = null;
+    bool m_isRunning = false;
+
     // Start is called before the first frame update
     void Start()
     {
@@ -52,6 +62,22 @@ public class SkeletonControl : MonoBehaviour
 
         // m_vecGateEntra = GameObject.Find("MonsterRoomEntraGate").transform.position;
         //m_vecGateExit = GameObject.Find("MonsterRoomExitGate").transform.position;
+
+        if(m_navmeshAgent == null)
+        {
+            m_navmeshAgent = GetComponent<NavMeshAgent>();
+        }
+
+        m_objPlayer = GameObject.Find("Player");
+
+        if(m_animator == null)
+        {
+            m_animator = GetComponent<Animator>();
+        }
+        else
+        {
+
+        }
     }
 
     // Update is called once per frame
@@ -61,6 +87,15 @@ public class SkeletonControl : MonoBehaviour
         {
             PatrolMode();
         }
+        else if(m_eSkeletonType == E_SKELETON_TYPE.Trace)
+        {
+            TraceMode();
+        }
+    }
+
+    private void LateUpdate()
+    {
+        SetAnimator();
     }
 
     private void FixedUpdate()
@@ -95,6 +130,7 @@ public class SkeletonControl : MonoBehaviour
             else
             {
             }
+
         }
         else if (m_isTurnning == true)
         {
@@ -117,6 +153,48 @@ public class SkeletonControl : MonoBehaviour
             }
         }
 
+        // 레이더로 플레이어 감시
+        // 자식오브젝트 head에 달린 SkeletonRader의 Trigger내에 있는 플레이어를 향해 레이를 쏘아
+        // 맞을시 추격모드로 변경
+        bool isLookPlayer = GetComponentInChildren<SkeletonRader>().IsDetectPlayer();
+        if (isLookPlayer)
+        {
+            m_fMoveSpeed = 0;
+            m_eSkeletonType = E_SKELETON_TYPE.Trace;
+        }
+        else
+        {
+
+        }
+
     }
 
+    //추격모드 함수
+    void TraceMode()
+    {
+        if(m_navmeshAgent != null)
+        {
+            m_isRunning = true;
+            Vector3 vecPlayerPos = m_objPlayer.transform.position;
+            //m_navmeshAgent 목적지를 플레이어로 설정
+            m_navmeshAgent.SetDestination(vecPlayerPos);
+            //Debug.Log(vecPlayerPos);
+        }
+        else
+        {
+            Debug.LogError("m_navmeshAgent가 없습니다.");
+        }
+    }
+
+    void SetAnimator()
+    {
+        if(m_animator != null)
+        {
+            m_animator.SetBool("isRun", m_isRunning);
+        }
+        else
+        {
+            Debug.LogError("m_animator이 없습니다.");
+        }
+    }
 }

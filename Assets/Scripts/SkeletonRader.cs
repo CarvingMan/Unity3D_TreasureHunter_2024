@@ -17,24 +17,14 @@ public class SkeletonRader : MonoBehaviour
     //플레이어 몸통의 Vector
     Vector3 m_vecPlayerBody = Vector3.zero;
 
-    // Start is called before the first frame update
-    void Start()
-    {
-       
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        IsDetectPlayer();
-    }
+  
 
     public bool IsDetectPlayer()
     {
         if (m_isInPlayer)
         {
             RaycastHit hit;
-            float fDistance = 6.0f;
+            float fDistance = 5.0f;
             //쉬프트 연산 하여 각각의 레이어에 해당하는 비트를 1로하고 비트 or연산자를 통해 레이어마스크 생성
             //이를 통해 해당 레이어를 사용한 오브젝트만 레이캐스트를 맞춘다.(엄폐물과 플레이어 몸통)
             int nHitLayer = (1 << LayerMask.NameToLayer("PlayerBody")) | (1 << LayerMask.NameToLayer("Obstacle"));
@@ -43,6 +33,7 @@ public class SkeletonRader : MonoBehaviour
             // 크기가 1인 방향 벡터를 구하여 해당방향으로 레이를 쏜다.
             Vector3 vecDirectionToPlayer = (m_vecPlayerBody - transform.position).normalized;
             bool isCast =  Physics.Raycast(transform.position, vecDirectionToPlayer, out hit, fDistance, nHitLayer);
+            //Debug.DrawRay(transform.position, vecDirectionToPlayer * 5, Color.red);
             if (isCast)
             {
                 //만약 엄폐물 뒤에 숨으면 Obstacle 태그가 먼저 맞을것이다.
