@@ -24,16 +24,17 @@ public class SkeletonRader : MonoBehaviour
         if (m_isInPlayer)
         {
             RaycastHit hit;
-            float fDistance = 5.0f;
+            float fDistance = 6f;
             //쉬프트 연산 하여 각각의 레이어에 해당하는 비트를 1로하고 비트 or연산자를 통해 레이어마스크 생성
             //이를 통해 해당 레이어를 사용한 오브젝트만 레이캐스트를 맞춘다.(엄폐물과 플레이어 몸통)
-            int nHitLayer = (1 << LayerMask.NameToLayer("PlayerBody")) | (1 << LayerMask.NameToLayer("Obstacle"));
+            //->엄폐물에서 navigation레이어로 변경: NavMesh Surface에서 navigation 레이어 사용하기 때문
+            int nHitLayer = (1 << LayerMask.NameToLayer("PlayerBody")) | (1 << LayerMask.NameToLayer("Navigation"));
             
             // 플레이어body position(종점)에서 transform.position(시점)을 한 후 normalized를 통하여
             // 크기가 1인 방향 벡터를 구하여 해당방향으로 레이를 쏜다.
             Vector3 vecDirectionToPlayer = (m_vecPlayerBody - transform.position).normalized;
             bool isCast =  Physics.Raycast(transform.position, vecDirectionToPlayer, out hit, fDistance, nHitLayer);
-            //Debug.DrawRay(transform.position, vecDirectionToPlayer * 5, Color.red);
+            Debug.DrawRay(transform.position, vecDirectionToPlayer * 5, Color.red);
             if (isCast)
             {
                 //만약 엄폐물 뒤에 숨으면 Obstacle 태그가 먼저 맞을것이다.

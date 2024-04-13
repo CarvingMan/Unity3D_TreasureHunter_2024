@@ -52,6 +52,10 @@ public class PlayerControl : MonoBehaviour
     //PlayerUIManager 스크립트를 가져오기위한 멤버변수 -> 내장 public 메소드 사용하기위함
     PlayerUIManager m_csPlayerUIManager;
 
+    //Player 생/사관련
+    bool m_isAlive = true;
+
+
     // Start is called before the first frame update
     void Start()
     {
@@ -112,9 +116,17 @@ public class PlayerControl : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        InputProcess();
-        CheckStairs();
-        MoveProcess();
+        // 플레이어가 살아있을시에만 처리
+        if (m_isAlive)
+        {
+            InputProcess();
+            CheckStairs();
+            MoveProcess();
+        }
+        else
+        {
+
+        }
         SetStamina();
         SetAnimator();
     }
@@ -381,6 +393,14 @@ public class PlayerControl : MonoBehaviour
         }
     }
 
+    void PlayerDie()
+    {
+        m_isAlive = false;
+        m_animator.Play("die");
+        GetComponentInChildren<BoxCollider>().enabled = false;
+        m_csPlayerUIManager.SetGameOver();
+    }
+
     //플레이어의 Rader Colider의 트리거 감지(문,열쇠,보물)
     private void OnTriggerEnter(Collider other)
     {
@@ -525,5 +545,18 @@ public class PlayerControl : MonoBehaviour
     {
         //감지 트리거에서 벗어날 시 UI SetActive를 false(아이템이 닿아 있을때만 보여준다.)
         m_csPlayerUIManager.SetActivePropsMessage(false); 
+    }
+
+    //플레이어와 충돌
+    private void OnCollisionEnter(Collision collision)
+    {
+        if (collision.collider.CompareTag("Monster"))
+        {
+            PlayerDie();
+        }
+        else
+        {
+
+        }
     }
 }

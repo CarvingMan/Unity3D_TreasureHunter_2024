@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using TMPro; // TextMeshPro 사용
 
 public class PlayerUIManager : MonoBehaviour
 {
@@ -31,6 +32,10 @@ public class PlayerUIManager : MonoBehaviour
     GameObject m_objItems = null;
     ItemManager m_csItemManager = null;
 
+    //게임오버 관련 멤버변수
+    TextMeshProUGUI m_txtGameOver = null;
+    GameManager m_csGameManager = null; //씬전환시 사용
+   
     // Start is called before the first frame update
     void Start()
     {
@@ -117,6 +122,23 @@ public class PlayerUIManager : MonoBehaviour
         }
 
         ClearInventory();// UI초기화
+
+        //GameOver관련
+        if(m_txtGameOver == null)
+        {
+            m_txtGameOver = GameObject.Find("GameOver").GetComponent<TextMeshProUGUI>();
+        }
+        else
+        {
+        }
+
+        if(m_csGameManager == null)
+        {
+            m_csGameManager = FindObjectOfType<GameManager>();
+        }
+        else
+        {
+        }
     }
 
     // Update is called once per frame
@@ -201,6 +223,31 @@ public class PlayerUIManager : MonoBehaviour
         else 
         {
             
+        }
+    }
+
+    public void SetGameOver()
+    {
+        StartCoroutine(FadeOutGameOver());
+    }
+
+    IEnumerator FadeOutGameOver()
+    {
+        yield return new WaitForSeconds(1f);
+        float fRaise = 0;
+        Color color = m_txtGameOver.color;
+        if(color.a == 0) //현재 투명도가 0일때에만 실행 -> 중복 Fade In 방지
+        {
+            while (fRaise < 1)// 증가값이 투명도 최대치 1이하일때
+            {
+                fRaise += 0.1f; //투명도값 증가
+
+                color.a = fRaise;
+                m_txtGameOver.color = color; //fRaise값으로 투명도값 변경 -> fade in
+                yield return new WaitForSeconds(0.1f); //0.1초 마다 실행
+            }
+            yield return new WaitForSeconds(2f); // 딜레이 후 씬 전환
+            m_csGameManager.LoadGameOverScene();
         }
     }
 }

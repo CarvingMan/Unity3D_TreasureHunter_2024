@@ -6,6 +6,9 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
-    path: Assets/Scenes/TestScene.unity
-    guid: af818e6dfaef30c4081fdfca31adff06
+    path: Assets/Scenes/DongeonScene.unity
+    guid: 863fe0c0feba8c74fa316bc98f22f8d6
+  - enabled: 1
+    path: Assets/Scenes/GameOver.unity
+    guid: 6cf0cec6556c91340b275355086e5ac0
   m_configObjects: {}

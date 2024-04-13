@@ -8,6 +8,7 @@ TagManager:
   - Door
   - Item
   - PlayerBody
+  - Monster
   layers:
   - Default
   - TransparentFX
@@ -18,7 +19,7 @@ TagManager:
   - Player
   - Stairs
   - PlayerBody
-  - Obstacle
+  - 
   - Navigation
   - 
   - 
