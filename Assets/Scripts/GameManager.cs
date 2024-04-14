@@ -7,12 +7,11 @@ public class GameManager : MonoBehaviour
 {
     Scene m_currentScene;
 
-    // Start is called before the first frame update
-    void Start()
+    private void Awake()
     {
         //현재 scene에 있는 GameManager 들을 전부 가져온다. 
         GameManager[] gameManagers = FindObjectsOfType<GameManager>();
-        if(gameManagers.Length == 1)
+        if (gameManagers.Length == 1)
         {
             //만약 배열의 크기가 1나이면 처음생긴 GameManager이므로 DontDestory로 씬전환시에서
             //하이어라키 창에 유지시킨다.
@@ -25,9 +24,22 @@ public class GameManager : MonoBehaviour
         }
     }
 
+    // Start is called before the first frame update
+    void Start()
+    {
+       
+    }
+
     private void Update()
     {
         m_currentScene = SceneManager.GetActiveScene(); //현재 활성화된 Scene 가져옴
+    }
+
+
+    public string GetCurrentSceneName()
+    {
+        m_currentScene = SceneManager.GetActiveScene(); //현재 활성화된 Scene 가져옴
+        return m_currentScene.name;
     }
 
 
@@ -44,4 +56,16 @@ public class GameManager : MonoBehaviour
         }
     }
 
+    //현재 씬이 DongeonScene가 아닐시 이동
+    public void LoadDongeonScene()
+    {
+        if (m_currentScene.name != "DongeonScene")
+        {
+            SceneManager.LoadScene("DongeonScene");
+        }
+        else
+        {
+
+        }
+    }
 }

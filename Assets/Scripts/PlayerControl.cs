@@ -396,6 +396,7 @@ public class PlayerControl : MonoBehaviour
     void PlayerDie()
     {
         m_isAlive = false;
+        m_vecMoveDirection = Vector3.zero;
         m_animator.Play("die");
         GetComponentInChildren<BoxCollider>().enabled = false;
         m_csPlayerUIManager.SetGameOver();

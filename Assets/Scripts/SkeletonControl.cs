@@ -26,8 +26,8 @@ public class SkeletonControl : MonoBehaviour
     Vector3 m_vecMoveDirection = Vector3.zero;
 
     //MosterRoom에서 벗어날시 공격을 멈추고 되돌아 가게 하기위해
-    Vector3 m_vecGateEntra = Vector3.zero;
-    Vector3 m_vecGateExit = Vector3.zero;
+    [SerializeField]
+    Transform m_trRoomCenter = null;
 
     //순찰모드일때 좌우로 순찰한다.
     float m_fPatrolMaxX = 4;
@@ -60,8 +60,6 @@ public class SkeletonControl : MonoBehaviour
         m_vecMoveDirection = Vector3.forward;
         m_vecTurnBack = transform.forward * -1;
 
-        // m_vecGateEntra = GameObject.Find("MonsterRoomEntraGate").transform.position;
-        //m_vecGateExit = GameObject.Find("MonsterRoomExitGate").transform.position;
 
         if(m_navmeshAgent == null)
         {
@@ -90,6 +88,14 @@ public class SkeletonControl : MonoBehaviour
         else if(m_eSkeletonType == E_SKELETON_TYPE.Trace)
         {
             TraceMode();
+        }
+        else if(m_eSkeletonType == E_SKELETON_TYPE.Return)
+        {
+            BackToStart();
+        }
+        else
+        {
+
         }
     }
 
@@ -172,17 +178,59 @@ public class SkeletonControl : MonoBehaviour
     //추격모드 함수
     void TraceMode()
     {
-        if(m_navmeshAgent != null)
+        if (m_navmeshAgent != null)
         {
-            m_isRunning = true;
-            Vector3 vecPlayerPos = m_objPlayer.transform.position;
-            //m_navmeshAgent 목적지를 플레이어로 설정
-            m_navmeshAgent.SetDestination(vecPlayerPos);
-            //Debug.Log(vecPlayerPos);
+            
+            if(m_trRoomCenter != null)
+            {
+                m_isRunning = true;
+                Vector3 vecPlayerPos = m_objPlayer.transform.position;
+                //플레이어와 출/입구의 위치 파악
+                float fSafeDistance = Vector3.Distance(vecPlayerPos, m_trRoomCenter.position);
+                //m_navmeshAgent 목적지를 플레이어로 설정
+                m_navmeshAgent.SetDestination(vecPlayerPos);
+                m_navmeshAgent.isStopped = false; //nevmeshAgent를 활성화
+                                                  //Debug.Log(vecPlayerPos);
+
+                //플레이어가 출/입구에 다다르면 돌아간다.
+                if (fSafeDistance >= 10f)
+                {
+                    m_eSkeletonType = E_SKELETON_TYPE.Return;
+                }
+                else
+                {
+
+                }
+            }
+            else
+            {
+                Debug.LogError("m_trRoomCenter이 없습니다.");
+            }
         }
         else
         {
             Debug.LogError("m_navmeshAgent가 없습니다.");
+        }
+    }
+
+    // 시작위치로 다시 돌아가는 함수
+    void BackToStart()
+    {
+        float fTargetDistance = Vector3.Distance(transform.position, m_vecStartPosition);
+        m_navmeshAgent.SetDestination(m_vecStartPosition);
+        if (fTargetDistance <= 0.5f)
+        {
+            m_isRunning = false;
+            //시작위치로 초기화 후 정찰모드로 변경
+            //navmeshAgent를 비활성화한다.-> 정찰모드일때에는 navigation을 사용하지 않기때문
+            m_navmeshAgent.isStopped = true;
+            transform.position = m_vecStartPosition;
+            m_isTurnning = true;
+            m_eSkeletonType = E_SKELETON_TYPE.Patrol;
+        }
+        else
+        {
+            
         }
     }
 
@@ -195,6 +243,18 @@ public class SkeletonControl : MonoBehaviour
         else
         {
             Debug.LogError("m_animator이 없습니다.");
+        }
+    }
+
+    private void OnCollisionEnter(Collision collision)
+    {
+        if (collision.collider.CompareTag("Player"))
+        {
+           m_eSkeletonType = E_SKELETON_TYPE.Return;
+        }
+        else
+        {
+
         }
     }
 }
