@@ -213,7 +213,7 @@ public class PlayerUIManager : MonoBehaviour
             for (int i = 0; i < objListItems.Count; i++)
             {
                 //스프라이트 파일명이 해당 오브젝트의 이름과 같다.
-                Sprite spriteItem = Resources.Load<Sprite>("Keys/"+objListItems[i].name.ToString());
+                Sprite spriteItem = Resources.Load<Sprite>("Items/"+objListItems[i].name.ToString());
                 m_arrItems[i].GetComponent<Image>().sprite = spriteItem;
                 Color color = m_arrItems[i].GetComponent<Image>().color;
                 color.a = 1;
@@ -231,6 +231,7 @@ public class PlayerUIManager : MonoBehaviour
         StartCoroutine(FadeOutGameOver());
     }
 
+    //코루틴을 통하여 페이드 인 효과
     IEnumerator FadeOutGameOver()
     {
         yield return new WaitForSeconds(1f);

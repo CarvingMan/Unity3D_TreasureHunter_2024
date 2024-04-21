@@ -50,10 +50,15 @@ public class PlayerControl : MonoBehaviour
     Animator m_animator = null;
 
     //PlayerUIManager 스크립트를 가져오기위한 멤버변수 -> 내장 public 메소드 사용하기위함
-    PlayerUIManager m_csPlayerUIManager;
+    PlayerUIManager m_csPlayerUIManager = null;
 
+    //GameManager 스크립트
+    GameManager m_csGameManager = null;
     //Player 생/사관련
     bool m_isAlive = true;
+
+    //보물 획득
+    bool m_isFoundTresure = false;
 
 
     // Start is called before the first frame update
@@ -111,13 +116,21 @@ public class PlayerControl : MonoBehaviour
         {
         }
 
+        if(m_csGameManager == null)
+        {
+            m_csGameManager = FindObjectOfType<GameManager>();
+        }
+        else
+        {
+
+        }
     }
 
     // Update is called once per frame
     void Update()
     {
-        // 플레이어가 살아있을시에만 처리
-        if (m_isAlive)
+        // 플레이어가 살아있을시에만 처리 && 보물을 찾기전
+        if (m_isAlive && !m_isFoundTresure)
         {
             InputProcess();
             CheckStairs();
@@ -279,6 +292,10 @@ public class PlayerControl : MonoBehaviour
             m_animator.SetBool("isRight", m_isRightKey);
             m_animator.SetBool("isLeft", m_isLeftKey);
             m_animator.SetBool("isRun", m_isRuning); //달리기만 키 입력이 아닌 m_isRunning이다.
+            if (m_isFoundTresure)
+            {
+                m_animator.Play("dancing"); //보물 찾을시 재생
+            }
         }
         else
         {
@@ -409,7 +426,7 @@ public class PlayerControl : MonoBehaviour
         string strPropsName = null;
         string strPropsDescription = null;
         if (other.CompareTag("Door"))
-        {   
+        {
             strPropsName = other.tag;
             bool isLocked = other.GetComponentInParent<DoorActive>().GetIsLocked();
             if (isLocked) //Door(Locked)가 감지된다면
@@ -463,8 +480,39 @@ public class PlayerControl : MonoBehaviour
             m_csPlayerUIManager.SetPropsMessage(strPropsName, strPropsDescription);
             m_csPlayerUIManager.SetActivePropsMessage(true);
         }
+        else if (other.CompareTag("Chest"))
+        { //보물상자 일때
+            strPropsName = other.tag;
+            //상자가 열려있는지 확인
+            bool isOpen = other.GetComponent<ChestActive>().GetIsOpen();
+            //현재 인벤토리 창에 추가가능한지 확인
+            bool isAddItem = GetComponent<ItemManager>().GetIsAddItem();
+            if (!isOpen)
+            {
+                //상자가 닫혀있다면
+                strPropsDescription = "Press E to open";
+            }
+            else
+            {
+                //상자가 열려있다면
+                if (isAddItem)
+                {
+                    strPropsDescription = "Press E to get";
+                }
+                else
+                {
+                    strPropsDescription = "Inventory is full";
+                }
+            }
+           
+            //TextUI설정
+            m_csPlayerUIManager.SetPropsMessage(strPropsName, strPropsDescription);
+            m_csPlayerUIManager.SetActivePropsMessage(true);
+
+        }
         else
         {
+
         }
     }
 
@@ -474,7 +522,6 @@ public class PlayerControl : MonoBehaviour
        
         if (other.CompareTag("Door"))
         {
-            m_csPlayerUIManager.SetActivePropsMessage(true);
             bool isLocked = other.GetComponentInParent<DoorActive>().GetIsLocked();
             // 트리거에 접촉한 콜라이더 오브젝트 태그가 Door(일반)이라면
             if (m_isActivating) //상호작용 키를 눌렀을때 ture가 된다.
@@ -511,6 +558,7 @@ public class PlayerControl : MonoBehaviour
                     bool isAtive = other.GetComponentInParent<DoorActive>().GetIsActive();
                     //Door 애니매에션의 파라미터를 토글한다. (닫혀있음)->(열림)
                     other.GetComponentInParent<DoorActive>().SetActiveAnimator(!isAtive);
+                    m_csPlayerUIManager.SetActivePropsMessage(false);
                 }
             }
             else
@@ -521,7 +569,6 @@ public class PlayerControl : MonoBehaviour
         }
         else if (other.CompareTag("Item"))
         {
-            m_csPlayerUIManager.SetActivePropsMessage(true);
             //현재 인벤토리 창에 추가가능한지 확인
             bool isAddItem = GetComponent<ItemManager>().GetIsAddItem();
             if (isAddItem && m_isActivating)
@@ -530,12 +577,48 @@ public class PlayerControl : MonoBehaviour
                 GetComponent<ItemManager>().SetItem(other.gameObject);
                 m_csPlayerUIManager.ClearInventory();
                 m_csPlayerUIManager.SetInventory();
+                m_csPlayerUIManager.SetActivePropsMessage(false);
             }
             else
             {
 
             }
             m_isActivating = false;
+        }
+        else if (other.CompareTag("Chest"))
+        {
+            bool isOpen = other.GetComponent<ChestActive>().GetIsOpen();
+            if(isOpen && m_isActivating)
+            {
+                //상자가 열려있고 상호작용 키를 눌렀을때
+                //현재 인벤토리 창에 추가가능한지 확인
+                bool isAddItem = GetComponent<ItemManager>().GetIsAddItem();
+                if (isAddItem)
+                {
+                    //Debug.Log("확인");
+                    GetComponent<ItemManager>().SetItem(other.gameObject);
+                    m_csPlayerUIManager.ClearInventory();
+                    m_csPlayerUIManager.SetInventory();
+                    m_csPlayerUIManager.SetActivePropsMessage(false);
+                    //보물 상사 획득시 춤을 추고 컷씬 실행
+                    m_isFoundTresure = true;
+                    m_csGameManager.LoadCutScene();
+                }
+                else
+                {
+
+                }
+                m_isActivating = false;
+            }
+            else if(!isOpen && m_isActivating)
+            {
+                //상자가 열려있지 않을때 상호작용키를 누르면 상자를 연다.
+                other.GetComponent<ChestActive>().OpenChest();
+                m_csPlayerUIManager.SetPropsMessage(other.tag, "Press E to get");
+              //  m_csPlayerUIManager.SetActivePropsMessage(true);
+                m_isActivating = false; // 열고나서 다시 활성화 키를 비활성화 해야한다
+                                        // 열자마자 아이템 획득방지
+            }
         }
         else
         {

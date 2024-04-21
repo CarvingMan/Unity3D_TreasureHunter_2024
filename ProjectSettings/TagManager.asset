@@ -9,6 +9,7 @@ TagManager:
   - Item
   - PlayerBody
   - Monster
+  - Chest
   layers:
   - Default
   - TransparentFX

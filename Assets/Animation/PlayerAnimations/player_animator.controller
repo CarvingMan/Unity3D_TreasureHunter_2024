@@ -776,6 +776,33 @@ AnimatorStateTransition:
   m_InterruptionSource: 0
   m_OrderedInterruption: 1
   m_CanTransitionToSelf: 1
+--- !u!1102 &-3579520227644365538
+AnimatorState:
+  serializedVersion: 6
+  m_ObjectHideFlags: 1
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: dancing
+  m_Speed: 1
+  m_CycleOffset: 0
+  m_Transitions: []
+  m_StateMachineBehaviours: []
+  m_Position: {x: 50, y: 50, z: 0}
+  m_IKOnFeet: 0
+  m_WriteDefaultValues: 1
+  m_Mirror: 0
+  m_SpeedParameterActive: 0
+  m_MirrorParameterActive: 0
+  m_CycleOffsetParameterActive: 0
+  m_TimeParameterActive: 0
+  m_Motion: {fileID: -203655887218126122, guid: 1ee337591488aa040a71e76689b34e6b,
+    type: 3}
+  m_Tag: 
+  m_SpeedParameter: 
+  m_MirrorParameter: 
+  m_CycleOffsetParameter: 
+  m_TimeParameter: 
 --- !u!1102 &-3320044337556230661
 AnimatorState:
   serializedVersion: 6
@@ -852,7 +879,10 @@ AnimatorStateMachine:
     m_Position: {x: 1630, y: 880, z: 0}
   - serializedVersion: 1
     m_State: {fileID: -1619399834131250509}
-    m_Position: {x: 1810, y: 40, z: 0}
+    m_Position: {x: 1810, y: -40, z: 0}
+  - serializedVersion: 1
+    m_State: {fileID: -3579520227644365538}
+    m_Position: {x: 1820, y: 100, z: 0}
   m_ChildStateMachines: []
   m_AnyStateTransitions: []
   m_EntryTransitions: []

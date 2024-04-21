@@ -68,4 +68,24 @@ public class GameManager : MonoBehaviour
 
         }
     }
+
+    //현재 씬이 CutScene이 아닐 시 이동
+    public void LoadCutScene()
+    {
+        if(m_currentScene.name != "CutScene")
+        {
+            StartCoroutine(CorCutScene());
+        }
+        else
+        {
+
+        }
+    }
+
+    //코루틴 사용하여 3초 이후 컷씬 로드
+    IEnumerator CorCutScene()
+    {
+        yield return new WaitForSeconds(3);
+        SceneManager.LoadScene("CutScene");
+    }
 }
