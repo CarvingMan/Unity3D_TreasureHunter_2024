@@ -6,7 +6,13 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
-    path: Assets/Scenes/DongeonScene.unity
+    path: Assets/Scenes/TitleScene.unity
+    guid: 5fd10ee610e909b468567c20863c2102
+  - enabled: 1
+    path: Assets/Scenes/LodingScene.unity
+    guid: aa5d7d7b9525ea547b2c040ab557c647
+  - enabled: 1
+    path: Assets/Scenes/DungeonScene.unity
     guid: 863fe0c0feba8c74fa316bc98f22f8d6
   - enabled: 1
     path: Assets/Scenes/CutScene.unity
@@ -14,4 +20,7 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/GameOver.unity
     guid: 6cf0cec6556c91340b275355086e5ac0
+  - enabled: 1
+    path: Assets/Scenes/EndingScene.unity
+    guid: 145370b4f4ddbb946b8092c4e772b801
   m_configObjects: {}

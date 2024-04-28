@@ -22,17 +22,8 @@ public class GameManager : MonoBehaviour
             // 배열에 크기가 1이상이라면 씬전환되면서 새로생긴 GameManager이므로 중복된 오브젝트 삭제
             Destroy(gameObject);
         }
-    }
 
-    // Start is called before the first frame update
-    void Start()
-    {
-       
-    }
-
-    private void Update()
-    {
-        m_currentScene = SceneManager.GetActiveScene(); //현재 활성화된 Scene 가져옴
+        m_currentScene = SceneManager.GetActiveScene();
     }
 
 
@@ -42,12 +33,50 @@ public class GameManager : MonoBehaviour
         return m_currentScene.name;
     }
 
+    //버튼을 누르자마 씬전환하는 것이 아닌 잠시 시간을 둠 -> 버튼 소리와 함께 전환되도록
+    //문자열로 받아 전환
+    IEnumerator LoadScene(string strScene, float fTime=1)
+    {
+        yield return new WaitForSeconds(fTime);
+        SceneManager.LoadScene(strScene);
+    }
+
+    //현재 씬이 TitleScene가 아닐시 이동
+    public void LoadTitleScene()
+    {
+        m_currentScene = SceneManager.GetActiveScene(); //현재 활성화된 Scene 가져옴
+        if (m_currentScene.name != "TitleScene")
+        {
+            StartCoroutine(LoadScene("TitleScene"));
+        }
+        else
+        {
+
+        }
+    }
+
+    //현재 씬이 LodingScene이 아닐때 이동
+    public void LoadLodingScene()
+    {
+        m_currentScene = SceneManager.GetActiveScene();
+        if (m_currentScene.name != "LodingScene")
+        {
+            StartCoroutine(LoadScene("LodingScene"));
+        }
+        else
+        {
+
+        }
+    }
+
 
     //현재 씬이 GameOver가 아닐시 이동
     public void LoadGameOverScene()
     {
-        if(m_currentScene.name != "GameOver")
+        m_currentScene = SceneManager.GetActiveScene(); //현재 활성화된 Scene 가져옴
+        if (m_currentScene.name != "GameOver")
         {
+            //게임오버 씬은 이미 PlayerUIManager에서 페이드인과 함께 시간을 두기에 바로 전환
             SceneManager.LoadScene("GameOver");
         }
         else
@@ -56,12 +85,13 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    //현재 씬이 DongeonScene가 아닐시 이동
-    public void LoadDongeonScene()
+    //현재 씬이 DungeonScene가 아닐시 이동
+    public void LoadDungeonScene()
     {
-        if (m_currentScene.name != "DongeonScene")
+        m_currentScene = SceneManager.GetActiveScene(); //현재 활성화된 Scene 가져옴
+        if (m_currentScene.name != "DungeonScene")
         {
-            SceneManager.LoadScene("DongeonScene");
+            StartCoroutine(LoadScene("DungeonScene"));
         }
         else
         {
@@ -72,9 +102,10 @@ public class GameManager : MonoBehaviour
     //현재 씬이 CutScene이 아닐 시 이동
     public void LoadCutScene()
     {
-        if(m_currentScene.name != "CutScene")
+        m_currentScene = SceneManager.GetActiveScene(); //현재 활성화된 Scene 가져옴
+        if (m_currentScene.name != "CutScene")
         {
-            StartCoroutine(CorCutScene());
+            StartCoroutine(LoadScene("CutScene", 3f));
         }
         else
         {
@@ -82,10 +113,17 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    //코루틴 사용하여 3초 이후 컷씬 로드
-    IEnumerator CorCutScene()
+   
+
+    //애플리케이션 종료 함수
+    public void AppExit()
     {
-        yield return new WaitForSeconds(3);
-        SceneManager.LoadScene("CutScene");
+        // 유니티에디터에서는 종료가 안되므로 전처리기 조건문을 사용하여 콘솔 출력(WEB에서도 종료가 안된다고 한다.)
+#if UNITY_EDITOR
+        Debug.Log("종료");
+#else // 다른 플랫폼에서는 종료
+        Application.Quit();
+#endif
     }
+
 }

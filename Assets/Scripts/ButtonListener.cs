@@ -12,18 +12,29 @@ public class ButtonListener : MonoBehaviour
     Button m_btnTitle = null;
     [SerializeField]
     Button m_btnRetry = null;
+    [SerializeField]
+    Button m_btnStart = null;
+    [SerializeField] 
+    Button m_btnExit = null;
 
     GameManager m_csGameManager = null;
 
     string m_strCurrentSceneName = null;
+
 
     // Start is called before the first frame update
     void Start()
     {
         m_csGameManager = FindObjectOfType<GameManager>();
         m_strCurrentSceneName = m_csGameManager.GetCurrentSceneName();
-        //인게임 중에는 다시 시작버튼이 아닌 continue 버튼이다.
-        if (m_strCurrentSceneName == "GameOver")
+        
+        if (m_strCurrentSceneName == "TitleScene")
+        {
+         
+            BtnStartListen();
+            BtnExitListen();
+        }
+        else if (m_strCurrentSceneName == "GameOver")
         {
             BtnRetryListen();
             BtnTitleListen();
@@ -36,17 +47,33 @@ public class ButtonListener : MonoBehaviour
     }
 
 
+    //버튼에 AddListener 추가 메소드들//
+
+    void BtnStartListen()
+    {
+        if (m_btnStart != null)
+        {
+            //게임 시작시 로딩씬으로 이동 이후 Deongeon씬
+            m_btnStart.onClick.AddListener(m_csGameManager.LoadLodingScene);
+            m_btnStart = null;
+        }
+        else
+        {
+            Debug.LogError("m_btnStart가 없습니다.");
+        }
+    }
+
     void BtnRetryListen()
     {
         if(m_btnRetry != null)
         {
-            m_btnRetry.onClick.AddListener(m_csGameManager.LoadDongeonScene);
+            m_btnRetry.onClick.AddListener(m_csGameManager.LoadDungeonScene);
             //Debug.Log("재시작");
             m_btnRetry = null;
         }
         else
         {
-            Debug.LogError("m_btnRetryListen이 없습니다.");
+            Debug.LogError("m_btnRetry가 없습니다.");
         }
 
     }
@@ -56,11 +83,25 @@ public class ButtonListener : MonoBehaviour
     {
         if(m_btnTitle != null)
         {
-            //Debug.Log("dd");
+            m_btnTitle.onClick.AddListener(m_csGameManager.LoadTitleScene);
+            m_btnTitle = null;
         }
         else
         {
+            Debug.LogError("m_btnTitle이 없습니다.");
+        }
+    }
 
+    void BtnExitListen()
+    {
+        if (m_btnExit != null)
+        {
+            m_btnExit.onClick.AddListener(m_csGameManager.AppExit);
+            m_btnExit = null;
+        }
+        else
+        {
+            Debug.LogError("m_btnExit가 없습니다.");
         }
     }
 
