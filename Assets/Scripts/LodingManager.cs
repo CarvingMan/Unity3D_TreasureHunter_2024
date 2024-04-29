@@ -82,11 +82,11 @@ public class LodingManager : MonoBehaviour
             //progress는 씬 로드의 진행비율을 0~1로 알려준다고 한다.
             if(asyncOperation.progress < 0.9f)
             {
-                //디바이스 마다 로딩바의 변환을 일정하게 하기위해 WaitForFixedUpdate을 사용하였다.
-                yield return new WaitForFixedUpdate();
+                //한 프레임이 끝날때까지 기다린다 UpDate와 같은 호출.
+                yield return new WaitForEndOfFrame();
                 //progress만큼 로딩바 이미지 표시
                 SetLodingBar(asyncOperation.progress);
-                Debug.Log("로딩중" + asyncOperation.progress.ToString());
+                //Debug.Log("로딩중" + asyncOperation.progress.ToString());
             }
             else
             {

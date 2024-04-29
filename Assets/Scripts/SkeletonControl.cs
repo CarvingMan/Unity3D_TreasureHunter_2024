@@ -14,7 +14,7 @@ public class SkeletonControl : MonoBehaviour
         Patrol,//순찰 모드
         Trace,//추격모드
         Return, // 처음위치로 돌아가기
-        Max,
+        Max
     }
 
 

@@ -33,12 +33,20 @@ public class GameManager : MonoBehaviour
         return m_currentScene.name;
     }
 
+    //기본 1초후 로드
     //버튼을 누르자마 씬전환하는 것이 아닌 잠시 시간을 둠 -> 버튼 소리와 함께 전환되도록
     //문자열로 받아 전환
     IEnumerator LoadScene(string strScene, float fTime=1)
     {
         yield return new WaitForSeconds(fTime);
         SceneManager.LoadScene(strScene);
+    }
+
+    //다른 스크립트에서 직접 위의LoadScene을 사용하고 싶을 때 대신 사용 pubic
+    //타임라인 스크립트에서 타임라인 시간에 따라 사용(시간 필수 입력)
+    public void LoadSceneEndTime(string strScene, float fTime)
+    {
+        StartCoroutine(LoadScene(strScene, fTime));
     }
 
     //현재 씬이 TitleScene가 아닐시 이동
