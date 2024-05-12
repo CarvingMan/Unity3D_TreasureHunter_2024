@@ -17,7 +17,25 @@ public class SkeletonRader : MonoBehaviour
     //플레이어 몸통의 Vector
     Vector3 m_vecPlayerBody = Vector3.zero;
 
-  
+    //audio 관련
+    //스켈레톤 PT_Spine의 Head에 달려있는 오디오 소스 
+    AudioSource m_HeadAudioSource = null;
+    [SerializeField]
+    AudioClip m_clipSkeletonRoar = null;
+    [SerializeField]
+    AudioClip m_clipSkeletonAttack = null;
+
+    private void Start()
+    {
+        if(m_HeadAudioSource == null)
+        {
+            m_HeadAudioSource=GetComponent<AudioSource>();
+        }
+        else
+        {
+
+        }
+    }
 
     public bool IsDetectPlayer()
     {
@@ -41,6 +59,8 @@ public class SkeletonRader : MonoBehaviour
                 if (hit.collider.CompareTag("PlayerBody"))
                 {
                     //Debug.Log("플레이어 감지");
+                    //울음소리 재생
+                    SetAudioRoar();
                     return true;
                 }
                 else
@@ -58,6 +78,61 @@ public class SkeletonRader : MonoBehaviour
         {
             return false; //만약 감지레이더 안에 플레이어가 없을시 레이캐스트를 쏘지 않는다.
         }
+    }
+
+    //IsDetectPlayer()에서 플레이어 를 감지했을시 스켈레톤의 울음소리(Roar) 재생
+    void SetAudioRoar()
+    {
+        //clip이 m_clipSkeletonRoar가 아닐시 오디오 세팅
+        if(m_HeadAudioSource.clip != m_clipSkeletonRoar)
+        {
+            //오디오 클립 변경/ 루프false/ Play
+            m_HeadAudioSource.clip = m_clipSkeletonRoar;
+            m_HeadAudioSource.loop = false;
+            m_HeadAudioSource.Play();
+            //오디오 클립 시간
+            float fClipTime = m_clipSkeletonRoar.length;
+            //클립시간 이후 초기화
+            StartCoroutine(CorAudioInit(fClipTime));
+        }
+        else
+        {
+        }
+    }
+
+    //공격소리 클립 재생 // 호출은 SkeletonControl에서 하기에 pubic
+    public void SetAttackAudio()
+    {
+        if (m_clipSkeletonAttack != null)
+        {
+            if (m_HeadAudioSource.clip != m_clipSkeletonAttack)
+            {
+                m_HeadAudioSource.clip = m_clipSkeletonAttack;
+                m_HeadAudioSource.loop = false;
+                m_HeadAudioSource.Play();
+                //오디오 클립 시간
+                float fClipTime = m_clipSkeletonAttack.length;
+                //클립시간 이후 초기화
+                StartCoroutine(CorAudioInit(fClipTime));
+            }
+            else
+            {
+            }
+        }
+        else
+        {
+            Debug.LogError("m_clipSkeletonAttack이 없습니다.");
+        }
+    }
+
+    //오디오소스 초기화 함수
+    IEnumerator CorAudioInit(float fClipTime)
+    {
+        //fClipTime이후 오디오 소스 초기화
+        yield return new WaitForSeconds(fClipTime);
+        m_HeadAudioSource.Stop();
+        m_HeadAudioSource.loop = false;
+        m_HeadAudioSource.clip = null;
     }
 
     private void OnTriggerStay(Collider other)

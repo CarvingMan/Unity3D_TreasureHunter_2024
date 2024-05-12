@@ -48,6 +48,16 @@ public class SkeletonControl : MonoBehaviour
     Animator m_animator = null;
     bool m_isRunning = false;
 
+
+    //오디오 관련
+    AudioSource m_SkeletonAudioSource = null;
+    //오디오 클립들
+    [SerializeField]
+    AudioClip m_clipSkeletonWalk = null;
+    [SerializeField]
+    AudioClip m_clipSkeletonRun = null;
+
+
     // Start is called before the first frame update
     void Start()
     {
@@ -76,6 +86,16 @@ public class SkeletonControl : MonoBehaviour
         {
 
         }
+
+        if(m_SkeletonAudioSource == null)
+        {
+            m_SkeletonAudioSource= GetComponent<AudioSource>();
+        }
+        else
+        {
+
+        }
+
     }
 
     // Update is called once per frame
@@ -97,11 +117,17 @@ public class SkeletonControl : MonoBehaviour
         {
 
         }
+
+        if(m_SkeletonAudioSource == null)
+        {
+            m_SkeletonAudioSource = GetComponent<AudioSource>();
+        }
     }
 
     private void LateUpdate()
     {
         SetAnimator();
+        SetSkeletonAudio();
     }
 
     private void FixedUpdate()
@@ -246,11 +272,56 @@ public class SkeletonControl : MonoBehaviour
         }
     }
 
+    void SetSkeletonAudio()
+    {
+        if (m_eSkeletonType == E_SKELETON_TYPE.Patrol)
+        {
+            if(m_clipSkeletonWalk != null)
+            {
+                //현재 오디오 클립이 해당로직에서 필요한 클립이 아닐시 한번만 실행
+                // 해당조건이 없으면 오디오가 끝나기 전에 계속 Play하기에 문제가 생긴다.
+                if (m_SkeletonAudioSource.clip != m_clipSkeletonWalk)
+                {
+                    m_SkeletonAudioSource.clip = m_clipSkeletonWalk;
+                    //walk나 run은 조건을 만족할 시 반복하여 재생 
+                    m_SkeletonAudioSource.loop = true;
+                    m_SkeletonAudioSource.Play();
+                }
+            }
+            else
+            {
+                Debug.LogError("m_clipSkeletonWalk가 없습니다.");
+            }
+        }
+        else //정찰모드가 아닐시는 뛰는 오디오 클립 재생
+        {
+            if (m_clipSkeletonRun != null)
+            {
+                if (m_SkeletonAudioSource.clip != m_clipSkeletonRun)
+                {
+                    m_SkeletonAudioSource.clip = m_clipSkeletonRun;
+                    //walk나 run은 조건을 만족할 시 반복하여 재생 
+                    m_SkeletonAudioSource.loop = true;
+                    m_SkeletonAudioSource.Play();
+                }
+            }
+            else
+            {
+                Debug.LogError("m_clipSkeletonWalk가 없습니다.");
+            }
+        }
+
+    }
+
+
     private void OnCollisionEnter(Collision collision)
     {
+        //플레이어와 충돌시
         if (collision.collider.CompareTag("Player"))
         {
-           m_eSkeletonType = E_SKELETON_TYPE.Return;
+            //공격소리 재생후 Return으로 Type변경
+            GetComponentInChildren<SkeletonRader>().SetAttackAudio();
+            m_eSkeletonType = E_SKELETON_TYPE.Return;
         }
         else
         {

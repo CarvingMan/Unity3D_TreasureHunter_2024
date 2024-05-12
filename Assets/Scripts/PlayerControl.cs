@@ -61,6 +61,17 @@ public class PlayerControl : MonoBehaviour
     bool m_isFoundTresure = false;
 
 
+    //사운드 관련
+    //플레이어의 오디오 소스
+    AudioSource m_PlayerAudioSource = null;
+    //오디오 소스클립에 담을(재생할) 클립들
+    [SerializeField]
+    AudioClip m_clipPlayerWalk = null;
+    [SerializeField]
+    AudioClip m_clipPlayerRun = null;
+    [SerializeField]
+    AudioClip m_clipPlayerDie = null;
+
     // Start is called before the first frame update
     void Start()
     {
@@ -124,6 +135,15 @@ public class PlayerControl : MonoBehaviour
         {
 
         }
+
+        if (m_PlayerAudioSource == null)
+        {
+            m_PlayerAudioSource = GetComponent<AudioSource>();
+        }
+        else
+        {
+
+        }
     }
 
     // Update is called once per frame
@@ -153,6 +173,9 @@ public class PlayerControl : MonoBehaviour
     //모든 Update 로직이 끝나고 실시한다. 카메라가 마지막에 움직이도록 한다.
     private void LateUpdate()
     {
+        //오디오
+        SetAudio();
+        //카메라 회전
         CameraRotate();
     }
 
@@ -410,11 +433,104 @@ public class PlayerControl : MonoBehaviour
         }
     }
 
+    //오디오 제어
+    void SetAudio()
+    {
+        //플레이어가 현재 살아있다면
+        if (m_isAlive)
+        {
+            if(m_vecMoveDirection != Vector3.zero)
+            {
+                //이동중일시
+                if (m_isRuning) //달리고 있을 시
+                {
+                    if(m_clipPlayerRun != null)
+                    {
+                        //현재 오디오 클립이 해당로직에서 필요한 클립이 아닐시 한번만 실행
+                        // 해당조건이 없으면 오디오가 끝나기 전에 계속 Play하기에 문제가 생긴다.
+                        if (m_PlayerAudioSource.clip != m_clipPlayerRun)
+                        {
+                            m_PlayerAudioSource.clip = m_clipPlayerRun;
+                            m_PlayerAudioSource.loop = true;
+                            m_PlayerAudioSource.Play();
+                        }
+                        else
+                        {
+                        }
+                    }
+                    else
+                    {
+                        Debug.LogError("m_clipPlayerRun이 없습니다.");
+                    }
+                }
+                else //걷고 있을 시
+                {
+                    if(m_clipPlayerWalk != null)
+                    {
+                         if (m_PlayerAudioSource.clip != m_clipPlayerWalk)
+                    {
+                        //Debug.Log("walk");
+                        m_PlayerAudioSource.Stop();
+                        m_PlayerAudioSource.clip = m_clipPlayerWalk;
+                        m_PlayerAudioSource.loop = true;
+                        m_PlayerAudioSource.Play();
+                    }
+                    else
+                    {
+                    }
+                    }
+                    else
+                    {
+                        Debug.LogError("m_clipPlayerWalk이 없습니다.");
+                    }
+                }
+            }
+            else
+            {
+                if(m_PlayerAudioSource.clip != null)
+                {
+                    //이동중이 아닐시 재생을 멈추고 초기화
+                    m_PlayerAudioSource.Stop();
+                    //멈추기만 하여도 다시 오디오 필요시 클립을 할당하지만 혹시 모를 상황에 초기화 한다. 
+                    m_PlayerAudioSource.clip = null;
+                    m_PlayerAudioSource.loop = false;
+                }
+                else
+                {
+
+                }
+            }
+        }
+        else
+        {
+            if (m_clipPlayerDie != null)
+            {
+                if (m_PlayerAudioSource.clip != m_clipPlayerDie)
+                {
+                    //플레이어 사망로직
+                    m_PlayerAudioSource.clip = m_clipPlayerDie;
+                    //사망 사운드는 loop를 false로 한다.
+                    m_PlayerAudioSource.loop = false;
+                    m_PlayerAudioSource.Play();
+                }
+            }
+            else
+            {
+                Debug.LogError("m_clipPlayerDie이 없습니다.");
+            }
+        }
+    }
+
+    //플레이어 die
     void PlayerDie()
     {
+        //isAlive false
         m_isAlive = false;
+        //vecMoveDirection을 zero로 하여 움직임을 멈춘다 이전 속도때문에 밀려나지 않게 하기위해
         m_vecMoveDirection = Vector3.zero;
         m_animator.Play("die");
+        // 몸의 전체 콜라이더를 토글하여 애니메이션 재생시 바닥에 누울수 있게 한다.
+        //하위 root 다리의 콜라이더는 남아있어 리지드바디로 인한 바닥뚫는 현상은 없다.
         GetComponentInChildren<BoxCollider>().enabled = false;
         m_csPlayerUIManager.SetGameOver();
     }
