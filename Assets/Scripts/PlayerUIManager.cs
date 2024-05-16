@@ -6,6 +6,8 @@ using TMPro; // TextMeshPro 사용
 
 public class PlayerUIManager : MonoBehaviour
 {
+    /*던전씬에서 플레이어의 UI를 관리하는 스크립트*/
+
     /* GetComponet와 SerializedField로 오브젝트를 가져오는 방법을 둘 다 사용하였다.
     사실상 SerializedField 같은경우 편하긴하나 값이 오브젝트마다 바뀌는 경우가 아니면
     권장하지는 않는다. */
@@ -36,6 +38,11 @@ public class PlayerUIManager : MonoBehaviour
     TextMeshProUGUI m_txtGameOver = null;
     GameManager m_csGameManager = null; //씬전환시 사용
    
+    //오디오 관련
+    AudioSource m_UIAudioSource = null;
+    [SerializeField]
+    AudioClip m_clipPickUp = null;
+
     // Start is called before the first frame update
     void Start()
     {
@@ -138,6 +145,11 @@ public class PlayerUIManager : MonoBehaviour
         }
         else
         {
+        }
+
+        if(m_UIAudioSource == null)
+        {
+            m_UIAudioSource = GetComponent<AudioSource>();
         }
     }
 
@@ -249,6 +261,50 @@ public class PlayerUIManager : MonoBehaviour
             }
             yield return new WaitForSeconds(2f); // 딜레이 후 씬 전환
             m_csGameManager.LoadGameOverScene();
+        }
+    }
+
+    // 아이템 얻는 오디오 재생 함수 PlayerControl.cs에서 호출ㄴ
+    public void SetPickUpAudio()
+    {
+        if(m_UIAudioSource != null)
+        {
+            if(m_clipPickUp != null)
+            {   //현재 오디오 클립이 해당로직에서 필요한 클립이 아닐시 한번만 실행
+                if (m_UIAudioSource.clip != m_clipPickUp)
+                {
+                    float fClipLenght = m_clipPickUp.length;//오디오 클립길이
+                    m_UIAudioSource.clip = m_clipPickUp; //클립설정
+                    m_UIAudioSource.loop = false; //루프false
+                    m_UIAudioSource.Play(); //재생
+                    StartCoroutine(CorInitAudioSource(fClipLenght));
+                }
+            }
+            else
+            {
+                Debug.LogError("m_clipPickUp이 없습니다.");
+            }
+        }
+        else
+        {
+            Debug.LogError("m_UIAudioSource가 없습니다.");
+        }
+
+    }
+
+    //클립 속도 만큼 기다린 후 AudioSource초기화 하는 코루틴
+    IEnumerator CorInitAudioSource(float fClipLength)
+    {
+        yield return new WaitForSeconds(fClipLength);
+        if(m_UIAudioSource != null)
+        {
+            m_UIAudioSource.Stop();
+            m_UIAudioSource.clip = null;
+            m_UIAudioSource.loop = false;
+        }
+        else
+        {
+            Debug.LogError("m_UIAudioSource가 없습니다.");
         }
     }
 }

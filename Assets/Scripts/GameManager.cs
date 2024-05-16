@@ -5,6 +5,8 @@ using UnityEngine.SceneManagement;
 
 public class GameManager : MonoBehaviour
 {
+    //전반적인 씬들의 씬 관리
+
     Scene m_currentScene;
 
     private void Awake()

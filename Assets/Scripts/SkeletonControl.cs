@@ -5,7 +5,8 @@ using UnityEngine.AI;
 
 public class SkeletonControl : MonoBehaviour
 {
-    //몬스터 AI에 따른 이동 스크립트 감지 레이더 반경과 관련 스크립트는 몬스터 머리에 부착
+    //몬스터 AI에 따른 이동 스크립트
+    //감지 레이더 반경과 관련 스크립트는 몬스터 머리에 부착
 
     // 몬스터의 이동 및 상태 타입설정
     public enum E_SKELETON_TYPE

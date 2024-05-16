@@ -71,6 +71,8 @@ public class PlayerControl : MonoBehaviour
     AudioClip m_clipPlayerRun = null;
     [SerializeField]
     AudioClip m_clipPlayerDie = null;
+    [SerializeField]
+    AudioClip m_clipDance = null;
 
     // Start is called before the first frame update
     void Start()
@@ -501,13 +503,13 @@ public class PlayerControl : MonoBehaviour
                 }
             }
         }
-        else
+        else //플레이어 사망시 오디오
         {
             if (m_clipPlayerDie != null)
             {
+                //현재 오디오 클립이 해당로직에서 필요한 클립이 아닐시 한번만 실행
                 if (m_PlayerAudioSource.clip != m_clipPlayerDie)
                 {
-                    //플레이어 사망로직
                     m_PlayerAudioSource.clip = m_clipPlayerDie;
                     //사망 사운드는 loop를 false로 한다.
                     m_PlayerAudioSource.loop = false;
@@ -518,6 +520,36 @@ public class PlayerControl : MonoBehaviour
             {
                 Debug.LogError("m_clipPlayerDie이 없습니다.");
             }
+        }
+
+        //만약 보물을 찾을 시 오디오 설정 메인카메라의 AudioSource를 설정한다.
+        if (m_isFoundTresure)
+        {
+            if(m_clipDance != null)
+            {
+                //메인 카메라 AudioSource 설정 Dance클립도 (BGM)이기때문
+                AudioSource CameraAudioSource = Camera.main.GetComponent<AudioSource>();
+                //현재 오디오 클립이 해당로직에서 필요한 클립이 아닐시 한번만 실행
+                if(CameraAudioSource.clip != m_clipDance)
+                {
+                    CameraAudioSource.Stop();//재생 멈춤
+                    CameraAudioSource.clip = m_clipDance;
+                    CameraAudioSource.loop = false; 
+                    CameraAudioSource.Play();
+                }
+                else
+                {
+                }
+                // 보물을 찾으면 컷씬으로 이동하므로, 다시 메인 BGM으로 바꾸는 로직은 우선 제외하였다.
+            }
+            else
+            {
+                Debug.LogError("m_clipDance가 없습니다.");
+            }
+        }
+        else
+        {
+
         }
     }
 
@@ -691,8 +723,9 @@ public class PlayerControl : MonoBehaviour
             {
                 //Debug.Log("확인");
                 GetComponent<ItemManager>().SetItem(other.gameObject);
-                m_csPlayerUIManager.ClearInventory();
-                m_csPlayerUIManager.SetInventory();
+                m_csPlayerUIManager.ClearInventory(); //인벤토리 초기화
+                m_csPlayerUIManager.SetInventory();// 업데이트된 인벤토리 세팅
+                m_csPlayerUIManager.SetPickUpAudio();// 오디오 재생
                 m_csPlayerUIManager.SetActivePropsMessage(false);
             }
             else
@@ -715,6 +748,7 @@ public class PlayerControl : MonoBehaviour
                     GetComponent<ItemManager>().SetItem(other.gameObject);
                     m_csPlayerUIManager.ClearInventory();
                     m_csPlayerUIManager.SetInventory();
+                    m_csPlayerUIManager.SetPickUpAudio();// 오디오 재생
                     m_csPlayerUIManager.SetActivePropsMessage(false);
                     //보물 상사 획득시 춤을 추고 컷씬 실행
                     m_isFoundTresure = true;

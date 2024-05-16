@@ -9,13 +9,7 @@ public class ItemManager : MonoBehaviour
     // 리스트의 최고 갯수는  UI panel의 이미지 갯수이므로 상수로 바뀌지 않게 한다.
     int m_nMaxLenght = 3; 
 
-    // Start is called before the first frame update
-    void Start()
-    {
-        
-    }
-
-
+ 
     //현재 리스트에 아이템을 추가가 가능한지 파악하는 함수
     public bool GetIsAddItem()
     {

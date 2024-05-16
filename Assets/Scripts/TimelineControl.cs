@@ -4,6 +4,9 @@ using UnityEngine;
 
 public class TimelineControl : MonoBehaviour
 {
+    //타임라인 종류에 따라 자동으로 다음 씬으로 이동하게 하기위해
+    //열거형 상수 타입을 사용하여 쉽게 타입만 설정하여 사용할수 있게 작성
+
     enum E_TIME_LINE
     {
         NONE,
