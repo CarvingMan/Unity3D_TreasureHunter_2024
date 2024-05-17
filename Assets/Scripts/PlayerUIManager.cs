@@ -24,6 +24,9 @@ public class PlayerUIManager : MonoBehaviour
     float m_fStaminaMaxWith = 0; // 스테미나 게이지 최대넓이
     float m_fCurrentStaminaRate = 0; //현재 스태미나 비율
 
+    //메뉴 관련 멤버변수
+    GameObject m_objMenu = null;
+
     //Props메세지 관련 멤버변수
     GameObject m_objPropsMessage = null; //text UI 자체를 setAcive toggle 오브젝트
     Text m_txtPropsName = null; // Props이름
@@ -42,6 +45,8 @@ public class PlayerUIManager : MonoBehaviour
     AudioSource m_UIAudioSource = null;
     [SerializeField]
     AudioClip m_clipPickUp = null;
+    [SerializeField]
+    AudioClip m_clipGameOver = null;
 
     // Start is called before the first frame update
     void Start()
@@ -53,8 +58,14 @@ public class PlayerUIManager : MonoBehaviour
         else
         {
         }
+
+        if(m_objMenu == null)
+        {
+            m_objMenu = GameObject.Find("Menu");
+        }
+
         //스태미나관련
-        if(m_objStamina == null)
+        if (m_objStamina == null)
         {
             Debug.LogError("m_objStamina가 없습니다.");
         }
@@ -151,13 +162,57 @@ public class PlayerUIManager : MonoBehaviour
         {
             m_UIAudioSource = GetComponent<AudioSource>();
         }
+
     }
 
     // Update is called once per frame
     void Update()
     {
-        SetStaminaUI();
+        if(Time.timeScale != 0)
+        {
+            //스테미나 세팅
+            SetStaminaUI();
+
+            //timeScale이 0일때에는 메뉴를 비활성화 시킨다.
+            if(m_objMenu.activeSelf == true)
+            {
+                // 활성화 되어있다 timeScale이 1이될때 한 번만 호출
+                m_objMenu.SetActive(false);
+            }
+        }
+        else //timeScale이 0일 때
+        {
+  
+        }
+        SetMenu();// 메뉴관련 함수는 timeScale에 영향 없이 호출한다.
     }
+
+    void SetMenu()
+    {
+        // 메뉴panel 세팅
+        if (m_objMenu != null)
+        {
+            //메뉴가 비활성화 상태일때만 esc버튼을 입력받는다.
+            if (m_objMenu.activeSelf == false)
+            {
+                bool isMenuKeyDown = Input.GetKeyDown(KeyCode.Escape);
+                if (isMenuKeyDown)
+                {
+                    m_csGameManager.PauseTime();
+                    m_objMenu.SetActive(true);//esc누를시 메뉴 활성화 -> 비활성화는 update에서 하고 있다. 
+                }
+            }
+            else // 메뉴가 활성화 상태일때
+            {
+
+            }
+        }
+        else
+        {
+            Debug.LogError("m_objMenu가 없습니다.");
+        }
+    }
+ 
 
     // 스테미나 Gauge 관리
     void SetStaminaUI()
@@ -247,13 +302,16 @@ public class PlayerUIManager : MonoBehaviour
     IEnumerator FadeOutGameOver()
     {
         yield return new WaitForSeconds(1f);
+        // 게임오버 오디오 클립 재생
+        SetGameoverClip();
+
         float fRaise = 0;
         Color color = m_txtGameOver.color;
-        if(color.a == 0) //현재 투명도가 0일때에만 실행 -> 중복 Fade In 방지
+        if(color.a == 0) //현재 투명도가 0일때에만 실행 -> 중복 코루틴 호출 Fade In 방지
         {
             while (fRaise < 1)// 증가값이 투명도 최대치 1이하일때
             {
-                fRaise += 0.1f; //투명도값 증가
+                fRaise += 0.025f; //투명도값 증가
 
                 color.a = fRaise;
                 m_txtGameOver.color = color; //fRaise값으로 투명도값 변경 -> fade in
@@ -261,6 +319,34 @@ public class PlayerUIManager : MonoBehaviour
             }
             yield return new WaitForSeconds(2f); // 딜레이 후 씬 전환
             m_csGameManager.LoadGameOverScene();
+        }
+    }
+    // 게임오버 오디오 클립 재생
+    void SetGameoverClip()
+    {
+        //메인 카메라 AudioSource 설정 GameOver클립도 (BGM)이기때문
+        AudioSource CameraAudioSource = Camera.main.GetComponent<AudioSource>();
+        if (CameraAudioSource == null)
+        {
+            Debug.LogError("메인카메라에 오디오 소스가 없습니다.");
+        }
+        else
+        {
+            if (m_clipGameOver != null)
+            {
+                //현재 오디오 클립이 해당로직에서 필요한 클립이 아닐시 한번만 실행
+                if (CameraAudioSource.clip != m_clipGameOver)
+                {
+                    CameraAudioSource.Stop();//재생 멈춤
+                    CameraAudioSource.clip = m_clipGameOver;
+                    CameraAudioSource.loop = false;
+                    CameraAudioSource.Play();
+                }
+            }
+            else
+            {
+
+            }
         }
     }
 

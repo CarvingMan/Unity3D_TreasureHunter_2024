@@ -5,7 +5,7 @@ using UnityEngine.SceneManagement;
 
 public class GameManager : MonoBehaviour
 {
-    //전반적인 씬들의 씬 관리
+    //전반적인 씬들의 씬 관리 및 게임 관리
 
     Scene m_currentScene;
 
@@ -29,6 +29,59 @@ public class GameManager : MonoBehaviour
     }
 
 
+
+    private void Update()
+    {
+        m_currentScene = SceneManager.GetActiveScene();
+        // 씬별 커서 설정
+        if (m_currentScene.name == "TitleScene" || m_currentScene.name == "GameOver")
+        {
+            Cursor.visible = true;
+        }
+        else if(m_currentScene.name == "DungeonScene")
+        {
+            if(Time.timeScale == 0) //정지 상태일때에는 커서를 보이게 설정
+            {
+                Cursor.visible = true;
+            }
+            else //timeScale이 0이 아닐 시 커서를 안보이게 설정
+            {
+                Cursor.visible = false;
+            }
+        }
+        else
+        {
+            Cursor.visible = false;
+        }
+    }
+
+
+    //time관련 관리
+
+    //timeScale = 1
+    public void PlayTime()
+    {
+        if(Time.timeScale != 1)
+        {
+            Time.timeScale = 1; //timeScale을 1로 설정
+        }
+    }
+
+    //time scale = 1
+    public void PauseTime()
+    {
+        if (Time.timeScale != 0)
+        {
+            Time.timeScale = 0; //timeScale을 0으로 설정(FixedUpdate는 자동으로 멈춤)
+                                //다만 update함수는 그대로 호출되기에 멈춤이 필요한 update는 별개로 조건설정 해주어야 한다.
+                                //deletime = (현재 프레임 시간 - 이전 프레임 시간)*Time.timeScale
+                                //update는 프레임 기반으로 호출되기에 영향을 받지 않고
+                                //FixedUpdate는 Time.fixedDeltaTime마다 호출하나 Time.timeScale의 영향을 받는다.
+        }
+    }
+
+
+    //씬 관련 관리//
     public string GetCurrentSceneName()
     {
         m_currentScene = SceneManager.GetActiveScene(); //현재 활성화된 Scene 가져옴
@@ -57,6 +110,12 @@ public class GameManager : MonoBehaviour
         m_currentScene = SceneManager.GetActiveScene(); //현재 활성화된 Scene 가져옴
         if (m_currentScene.name != "TitleScene")
         {
+            if(m_currentScene.name == "DungeonScene")
+            {
+                //던전씬에서 메뉴를 눌렀을시 timeScale이 0이 되므로 title버튼을 눌러
+                //Title씬으로 넘어가기 전에 timeScale을 1로 바꾸어 주어야 한다.
+                PlayTime(); 
+            }
             StartCoroutine(LoadScene("TitleScene"));
         }
         else
@@ -130,7 +189,7 @@ public class GameManager : MonoBehaviour
     {
         // 유니티에디터에서는 종료가 안되므로 전처리기 조건문을 사용하여 콘솔 출력(WEB에서도 종료가 안된다고 한다.)
 #if UNITY_EDITOR
-        Debug.Log("종료");
+       // Debug.Log("종료");
 #else // 다른 플랫폼에서는 종료
         Application.Quit();
 #endif

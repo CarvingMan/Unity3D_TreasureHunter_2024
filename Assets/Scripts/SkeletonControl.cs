@@ -102,33 +102,43 @@ public class SkeletonControl : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if (m_eSkeletonType == E_SKELETON_TYPE.Patrol)
+        if(Time.timeScale != 0)
         {
-            PatrolMode();
-        }
-        else if(m_eSkeletonType == E_SKELETON_TYPE.Trace)
-        {
-            TraceMode();
-        }
-        else if(m_eSkeletonType == E_SKELETON_TYPE.Return)
-        {
-            BackToStart();
-        }
-        else
-        {
+            if (m_eSkeletonType == E_SKELETON_TYPE.Patrol)
+            {
+                PatrolMode();
+            }
+            else if (m_eSkeletonType == E_SKELETON_TYPE.Trace)
+            {
+                TraceMode();
+            }
+            else if (m_eSkeletonType == E_SKELETON_TYPE.Return)
+            {
+                BackToStart();
+            }
+            else
+            {
 
+            }
+        }
+        else //timeScale¿Ã 0¿œ Ω√ ∏ÿ√„
+        {
+            m_fMoveSpeed = 0;
+            m_navmeshAgent.isStopped = true;
+            m_SkeletonAudioSource.Stop();
+            m_SkeletonAudioSource.clip = null;
+            m_SkeletonAudioSource.loop = false;
         }
 
-        if(m_SkeletonAudioSource == null)
-        {
-            m_SkeletonAudioSource = GetComponent<AudioSource>();
-        }
     }
 
     private void LateUpdate()
     {
-        SetAnimator();
-        SetSkeletonAudio();
+        if(Time.timeScale != 0)
+        {
+            SetAnimator();
+            SetSkeletonAudio();
+        }
     }
 
     private void FixedUpdate()

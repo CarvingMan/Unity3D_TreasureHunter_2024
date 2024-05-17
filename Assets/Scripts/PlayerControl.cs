@@ -74,6 +74,7 @@ public class PlayerControl : MonoBehaviour
     [SerializeField]
     AudioClip m_clipDance = null;
 
+
     // Start is called before the first frame update
     void Start()
     {
@@ -151,19 +152,43 @@ public class PlayerControl : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        // 플레이어가 살아있을시에만 처리 && 보물을 찾기전
-        if (m_isAlive && !m_isFoundTresure)
+       //timeScale이 0이 아닐때에만 호출
+       if(Time.timeScale != 0)
         {
-            InputProcess();
-            CheckStairs();
-            MoveProcess();
-        }
-        else
-        {
+            // 플레이어가 살아있을시 && 보물을 찾기전에만 처리
+            if (m_isAlive && !m_isFoundTresure)
+            {
+                InputProcess();
+                CheckStairs();
+                MoveProcess();
+            }
 
+            SetStamina();
+            SetAnimator();
+       }
+       else //timeScale = 0일시
+       {
+            m_vecMoveDirection = Vector3.zero;// 움직임 정지
+            //플레이어 오디오 초기화
+            m_PlayerAudioSource.Stop();
+            m_PlayerAudioSource.clip = null;
+            m_PlayerAudioSource.loop = false;
+       }
+    }
+
+    //모든 Update 로직이 끝나고 실시한다. 카메라가 마지막에 움직이도록 한다.
+    private void LateUpdate()
+    {
+        if (Time.timeScale != 0)
+        {
+            //오디오
+            SetAudio();
+            //카메라 회전
+            if(m_isAlive && !m_isFoundTresure)
+            {
+                CameraRotate();
+            }
         }
-        SetStamina();
-        SetAnimator();
     }
 
     //설정된 프레임이 지날 때마다 호출된다. 물리적인 움직임은 디바이스상관없이 같은 속도여야 한다.
@@ -171,14 +196,6 @@ public class PlayerControl : MonoBehaviour
     {
         //방향*스피드*가속도(기본1이라 영향X 달리기시 3배속)
         transform.Translate(m_vecMoveDirection * m_fMoveSeed * m_fRunAcceleration);
-    }
-    //모든 Update 로직이 끝나고 실시한다. 카메라가 마지막에 움직이도록 한다.
-    private void LateUpdate()
-    {
-        //오디오
-        SetAudio();
-        //카메라 회전
-        CameraRotate();
     }
 
     // 키 입력 처리 함수
@@ -279,6 +296,7 @@ public class PlayerControl : MonoBehaviour
         }
     }
 
+    //스테미나 설정
     void SetStamina()
     {
         if (m_isRuning)
@@ -503,8 +521,9 @@ public class PlayerControl : MonoBehaviour
                 }
             }
         }
-        else //플레이어 사망시 오디오
+        else //플레이어 사망시  m_clipPlayerDie클립 재생
         {
+            //플레이어 오디오
             if (m_clipPlayerDie != null)
             {
                 //현재 오디오 클립이 해당로직에서 필요한 클립이 아닐시 한번만 실행
@@ -515,11 +534,13 @@ public class PlayerControl : MonoBehaviour
                     m_PlayerAudioSource.loop = false;
                     m_PlayerAudioSource.Play();
                 }
+
             }
             else
             {
                 Debug.LogError("m_clipPlayerDie이 없습니다.");
             }
+
         }
 
         //만약 보물을 찾을 시 오디오 설정 메인카메라의 AudioSource를 설정한다.

@@ -5,6 +5,7 @@ using UnityEngine.UI;
 
 public class ButtonListener : MonoBehaviour
 {
+    //버튼의 onClick.AddListener()통해 씬별 필요한 버튼의 addlistener을 스크립트로 추가
     //GameManager은 씬이동시 파괴되지 않고 생성되지만 기본적으로 씬로드전까지는 없으므로
     //해당 스크립트와 같이 대기하다 생성될시 불러온다.
 
@@ -14,6 +15,8 @@ public class ButtonListener : MonoBehaviour
     Button m_btnRetry = null;
     [SerializeField]
     Button m_btnStart = null;
+    [SerializeField]
+    Button m_btnContinue = null;
     [SerializeField] 
     Button m_btnExit = null;
 
@@ -28,11 +31,17 @@ public class ButtonListener : MonoBehaviour
         m_csGameManager = FindObjectOfType<GameManager>();
         m_strCurrentSceneName = m_csGameManager.GetCurrentSceneName();
         
+        // 해당 스크립트는 버튼이 있는 씬마다 개별 부착되어있으므로 씬로드시 한번만 addListener을 등록
         if (m_strCurrentSceneName == "TitleScene")
         {
          
             BtnStartListen();
             BtnExitListen();
+        }
+        else if(m_strCurrentSceneName == "DungeonScene")
+        {
+            BtnContinueListen();
+            BtnTitleListen();
         }
         else if (m_strCurrentSceneName == "GameOver")
         {
@@ -48,6 +57,21 @@ public class ButtonListener : MonoBehaviour
 
 
     //버튼에 AddListener 추가 메소드들//
+
+    void BtnContinueListen()
+    {
+        if(m_btnContinue != null)
+        {
+            m_btnContinue.onClick.AddListener(m_csGameManager.PlayTime);
+            //GameManager.cs에서 timeScale을 다시 1로 설정
+            m_btnContinue = null;
+        }
+        else
+        {
+            Debug.LogError("m_btnContinue가 없습니다.");
+        }
+    }
+
 
     void BtnStartListen()
     {
@@ -67,7 +91,7 @@ public class ButtonListener : MonoBehaviour
     {
         if(m_btnRetry != null)
         {
-            m_btnRetry.onClick.AddListener(m_csGameManager.LoadDungeonScene);
+            m_btnRetry.onClick.AddListener(m_csGameManager.LoadLodingScene);
             //Debug.Log("재시작");
             m_btnRetry = null;
         }

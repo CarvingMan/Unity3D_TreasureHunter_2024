@@ -52,7 +52,7 @@ public class SkeletonRader : MonoBehaviour
             // 크기가 1인 방향 벡터를 구하여 해당방향으로 레이를 쏜다.
             Vector3 vecDirectionToPlayer = (m_vecPlayerBody - transform.position).normalized;
             bool isCast =  Physics.Raycast(transform.position, vecDirectionToPlayer, out hit, fDistance, nHitLayer);
-            //Debug.DrawRay(transform.position, vecDirectionToPlayer * 5, Color.red);
+            Debug.DrawRay(transform.position, vecDirectionToPlayer * 5, Color.red);
             if (isCast)
             {
                 //만약 엄폐물 뒤에 숨으면 Obstacle 태그가 먼저 맞을것이다.
