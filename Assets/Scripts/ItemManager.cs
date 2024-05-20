@@ -4,6 +4,11 @@ using UnityEngine;
 
 public class ItemManager : MonoBehaviour
 {
+    /*
+     플레이어의 아이템을 관리하는 스크립트
+     */
+
+
     //플레이어의 아이템 오브젝트를 담을 리스트
     List<GameObject> m_listItems = new List<GameObject>();
     // 리스트의 최고 갯수는  UI panel의 이미지 갯수이므로 상수로 바뀌지 않게 한다.
