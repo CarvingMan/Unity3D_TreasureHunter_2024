@@ -10,6 +10,10 @@
 /[Ll]ogs/
 /[Uu]ser[Ss]ettings/
 
+#유로에셋
+/Assets/Asset_Dungeon/
+/Assets/Resources/Items/
+
 # MemoryCaptures can get excessive in size.
 # They also could contain extremely sensitive data
 /[Mm]emoryCaptures/
